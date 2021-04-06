@@ -3,8 +3,7 @@ import imutils
 import cv2
 import matplotlib.pyplot as plt
 
-def align_images(image, template, maxFeatures=500, keepPercent=0.8,
-	debug=False):
+def align_images(image, template, debug=False):
 	# convert both the input image and template to grayscale
 	imageGray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	templateGray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
@@ -14,6 +13,7 @@ def align_images(image, template, maxFeatures=500, keepPercent=0.8,
 	# find the keypoints and descriptors with SIFT
 	kp1, des1 = sift.detectAndCompute(templateGray, None)
 	kp2, des2 = sift.detectAndCompute(imageGray, None)
+
 
 	FLANN_INDEX_KDTREE = 1
 	index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
@@ -53,13 +53,16 @@ if __name__ == "__main__":
 	image = image = cv2.imread(str(Path("data/CNI_caro3.jpg")))
 	template = cv2.imread(str(Path("data/CNI_robin.jpg")))
 
-	aligned = align_images(image, template, maxFeatures=500, keepPercent=0.2,
-				 debug=True)
+	aligned = align_images(image, template, debug=True)
+
 
 	# resize both the aligned and template images so we can easily
 	# visualize them on our screen
 	aligned = imutils.resize(aligned, width=800)
 	template = imutils.resize(template, width=800)
+
+	plt.imshow(aligned)
+	plt.show()
 	# our first output visualization of the image alignment will be a
 	# side-by-side comparison of the output aligned image and the
 	# template
