@@ -1,0 +1,13 @@
+beautifulsoup4
+imutils
+matplotlib
+mkl-fft
+mkl-random
+mkl-service
+olefile
+opencv-python
+pip-chill
+pytesseract
+sip
+streamlit
+wincertstore
