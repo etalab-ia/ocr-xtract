@@ -9,10 +9,20 @@ from src.image_preprocessing.remove_noise import ImageCleaning
 
 
 class CNI():  # This should be a child class from more generic class
+    # TODO : traiter l'information date de validité en ajoutant un traitement du verso
+
     def __init__(self, reference_image='data/CNI_robin.jpg'):
+        # The zones are given as (x_start,y_start,x_end,y_end)
         self.zones = {
-            'nom': {"title": (434, 217, 541, 268), "field": (525, 210, 800, 270)},
-            'prénom': {"title": (454, 302, 573, 325), "field": (570, 280, 1500, 350)}
+            'nom': {"title": (448, 212, 524, 242), "value": "Nom :", "field": (525, 210, 800, 270)},
+            'prenom': {"title": (448, 294, 576, 329), "value": "Prénom(s) :",  "field": (570, 280, 1500, 350)},
+            'date_naissance': {"title": (745, 375, 850, 410), "value": "Né(e) le :", "field": (870, 375, 1060, 410)},
+            'sexe': {'value': 'Sexe', 'title': (447, 381, 527, 415)},
+            'taille': {'value': 'Taille :', 'title': (451, 466, 537, 492)},
+            'signature': {'value': 'Signature', 'title': (449, 503, 570, 537)},
+            'du titulaire': {'value': 'du titulaire :', 'title': (449, 538, 611, 567)},
+            'nationalite_francaise': {'value': 'Nationalité Française', 'title': (920, 143, 1179, 180)},
+            "carte_nationale": {'value': 'CARTE NATIONALE', 'title': (130, 160, 376, 192)}
         }
         self.reference_image = cv2.imread(str(Path(reference_image)))
         self.im_clean = ImageCleaning()
@@ -59,7 +69,7 @@ class CNI():  # This should be a child class from more generic class
 if __name__ == "__main__":
     from pathlib import Path
 
-    cni = CNI(params='basic')
+    cni = CNI()
     cni.load_image(image_path=Path('data/CNI_caro.jpg'))
     cni.tune_preprocessing()
     results = cni.extract_ocr()

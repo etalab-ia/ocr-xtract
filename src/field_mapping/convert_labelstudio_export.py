@@ -28,7 +28,7 @@ if __name__ == "__main__":
         try:
             x, y, w, h = convert_from_ls(label)
             annotation = {'value': label['value']['rectanglelabels'][0],
-                          'label': {int(x), int(y), int(x + w), int(y + h)}}
+                          'title': (int(x), int(y), int(x + w), int(y + h))}
             res.append(annotation)
         except:
             continue
