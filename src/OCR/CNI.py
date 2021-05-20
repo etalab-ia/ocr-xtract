@@ -5,17 +5,17 @@ import matplotlib.pyplot as plt
 import pytesseract
 
 from src.image_preprocessing.preprocessing import align_images
-from src.image_preprocessing.remove_noise import remove_noise_and_smooth
+from src.image_preprocessing.remove_noise import ImageCleaning
 
 
-class CNI(): #This should be a child class from more generic class
-    def __init__(self, params='basic'):
-        if params == 'basic':
-            self.zones = {'nom': {"title": (434, 217, 541, 268), "field": (525, 210, 800, 270)},
-                         'prénom': {"title": (454, 302, 573, 325), "field": (570, 280, 1500, 350)}
-                        }
-            self.reference_image = cv2.imread(str(Path('data/CNI_robin.jpg')))
-            self.preprocessing_parameters = ()
+class CNI():  # This should be a child class from more generic class
+    def __init__(self, reference_image='data/CNI_robin.jpg'):
+        self.zones = {
+            'nom': {"title": (434, 217, 541, 268), "field": (525, 210, 800, 270)},
+            'prénom': {"title": (454, 302, 573, 325), "field": (570, 280, 1500, 350)}
+        }
+        self.reference_image = cv2.imread(str(Path(reference_image)))
+        self.im_clean = ImageCleaning()
 
     def load_image(self, image_path, debug=False):
         """
@@ -38,16 +38,16 @@ class CNI(): #This should be a child class from more generic class
             cv2.imshow("Image Alignment Overlay", output)
             cv2.waitKey(0)
 
-
     def tune_preprocessing(self):
         """
         this function should autotune the parameters for the denoising of the image to optimize the output of the known fields
+        Maybe it should belong to a proper image cleaning class
         :return:
         """
         pass
 
-    def extract_ocr (self):
-        cleaned_image = remove_noise_and_smooth(self.image_to_process)
+    def extract_ocr(self):
+        cleaned_image = self.im_clean.remove_noise_and_smooth(self.image_to_process)
         results = {}
         for zone in self.zones.keys():
             y_min, x_min, y_max, x_max = self.zones[zone]['field']
@@ -58,6 +58,7 @@ class CNI(): #This should be a child class from more generic class
 
 if __name__ == "__main__":
     from pathlib import Path
+
     cni = CNI(params='basic')
     cni.load_image(image_path=Path('data/CNI_caro.jpg'))
     cni.tune_preprocessing()
