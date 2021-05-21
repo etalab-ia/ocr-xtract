@@ -5,11 +5,13 @@ OCR_XTRACT
 This project is conducted by the [Lab IA](https://www.etalab.gouv.fr/datasciences-et-intelligence-artificielle) at [Etalab](https://www.etalab.gouv.fr/).  
 The aim of the Lab IA is to help the french administration to modernize its services by the use of modern AI techniques.  
 Other Lab IA projects can be found at the [main GitHub repo](https://github.com/etalab-ia/). 
-
 #### -- Project Status: [Active]
-## OCR Xtract
-OCR-Xtract is a tool 
 
+## OCR Xtract
+OCR-Xtract is a tool to extract information from administrative documents. It is meant to ease the work of state agents willing to validate administrative dossiers. OCR_Xtract will consist in :
+- A front-end for uploading files (not included in this repo)
+- An API to access the extracting logic
+- The code to extract the information from the scanned images. 
 
 ### Methods Used
 * OCR
@@ -24,11 +26,16 @@ For now, only a POC is avaible for extracting information for French DNI
 * Fork this repo 
 * Install requirements : `pip install -r requirements.txt`
 
-## Performance evaluation
-
-
-### How to publish the piafagent docker image
-Follow README.md on the [PiafAgent repo](https://github.com/etalab-ia/piaf_agent)
+## How to extract information 
+### CNI
+Place a reference CNI in `/data` and point to it when creating a `CNI` class :
+```Python
+from pathlib import Path
+cni = CNI(reference_image='data/CNI_ref.jpg')
+cni.load_image(image_path=Path('data/CNI_to_xtract.jpg'))
+cni.tune_preprocessing()
+results = cni.extract_ocr()
+```
 
 ## Contributing Lab IA Members
 * [R. Reynaud](https://github.com/rob192)
