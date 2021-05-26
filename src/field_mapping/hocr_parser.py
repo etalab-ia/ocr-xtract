@@ -7,11 +7,6 @@ except ImportError:
     import Image
 import pytesseract
 
-from src.util.debug import show_image_with_boxes
-
-from src.image_preprocessing.preprocessing import align_images
-from src.image_preprocessing.remove_noise import ImageCleaning
-
 
 def parse_hocr(search_terms=None, hocr_file=None, regex=None):
     """Parse the hocr file and find a reasonable bounding box for each of the strings

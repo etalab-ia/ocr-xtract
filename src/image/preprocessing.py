@@ -2,6 +2,17 @@ import numpy as np
 import imutils
 import cv2
 import matplotlib.pyplot as plt
+from pdf2image import convert_from_path
+
+
+def convert_pdf_to_image(pdf):
+    """
+    This function uses the
+    :param pdf:
+    :return:
+    """
+    pages = convert_from_path('pdf_file', 500)
+    return pages
 
 
 def align_images(image, template, debug=False):

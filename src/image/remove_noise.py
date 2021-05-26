@@ -23,6 +23,14 @@ class ImageCleaning():
         #img = cv2.dilate(img,kernel,iterations = 1) #cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
         return img
 
+    def tune_preprocessing(self):
+        """
+        this function should autotune the parameters for the denoising of the image to optimize the output of the known fields
+        Maybe it should belong to a proper image cleaning class
+        :return:
+        """
+        pass
+
 if __name__ == "__main__":
     from pathlib import Path
 

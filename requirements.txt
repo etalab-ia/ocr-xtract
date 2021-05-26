@@ -6,6 +6,7 @@ mkl-random
 mkl-service
 olefile
 opencv-python
+pdf2image
 pip-chill
 pytesseract
 sip
