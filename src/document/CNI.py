@@ -41,7 +41,32 @@ class Document():
     def extract_ocr(self, debug=False):
         for image_type in self.images.keys():
             for image in self.images[image_type]:
-                image.extract_ocr(ocr_unknown_fields_only=True, debug=debug)
+                image.extract_ocr(ocr_unknown_fields_only=False, debug=debug)
+
+    def select_extracted_field(self, extracted_information):
+        """
+        this function only selects the fields of interests (named 'fields') from the image.extractedinformation.
+        It removes the known fields named 'titles'
+        :param extracted_information: the extracted information from the image
+        :return: a dict with {field_name: extracted information}
+        """
+        selection = {}
+        for information in extracted_information.keys():
+            if 'field' in extracted_information[information].keys():
+                selection[information] = extracted_information[information]['field']
+        return selection
+
+    def export_ocr(self):
+        """
+        this function exports the extracted information from the images of the document
+        :return: a dict with { image_type : [ {field_name: extracted information} ] }
+        """
+        export = {}
+        for image_type in self.images.keys():
+            export[image_type] = []
+            for image in self.images[image_type]:
+                export[image_type].append(self.select_extracted_field(image.extracted_information))
+        return export
 
 
 class CNI(Document):  # This should be a child class from more generic class
@@ -57,9 +82,10 @@ class CNI(Document):  # This should be a child class from more generic class
 
 
 if __name__ == "__main__":
+    import json
     cni = CNI(recto_path='data/CNI_caro3.jpg')
-    cni.align_images(debug=True)
+    cni.align_images(debug=False)
     cni.clean_images()
-    cni.extract_ocr(debug=True)
-    results = cni.extract_ocr()
-    print(results)
+    cni.extract_ocr(debug=False)
+    results = cni.export_ocr()
+    print(json.dumps(results, indent=4, sort_keys=True))

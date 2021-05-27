@@ -36,6 +36,7 @@ class Image():
         pass
 
     def align_images(self, debug=False):
+        print('Aligning image with the reference now ...')
         # convert both the input image and template to grayscale
         imageGray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
         templateGray = cv2.cvtColor(self.reference_image, cv2.COLOR_BGR2GRAY)
@@ -87,11 +88,13 @@ class Image():
         if self.image_state['cleaned']:
             print("Image was already cleaned before, using original image")
             if self.image_state['aligned']:
-                self.align_images()
                 self.image_cleaner.remove_noise_and_smooth(self.image)
             else:
+                print("Image was not aligned before, Let's do it !")
+                self.align_images()
                 self.image_cleaner.remove_noise_and_smooth(self.image)
         else:
+            print("Cleaning image now ...")
             self.image = self.image_cleaner.remove_noise_and_smooth(self.image)
             self.image_state['cleaned'] = True
         # TODO : implement a check that the image was properly cleaned. If not, trigger self.tune_preprocessing
@@ -100,6 +103,7 @@ class Image():
     def ocr_field(self,zone, field, debug=False):
         """
         Ocr field where field is a tuple from zone in the format (x_start,y_start,x_end,y_end)
+        :param zone: name of the zone to extract (string)
         :param field: tuple from zone in the format (x_start,y_start,x_end,y_end)
         :param debug: if True, a window will appear with the field OCRed
         :return:
@@ -121,13 +125,14 @@ class Image():
             self.align_images()
 
         for zone in self.zones.keys():
+            self.extracted_information[zone] = {}
             if 'title' in self.zones[zone].keys():
-                if not ocr_unknown_fields_only == True:
-                    continue
+                if ocr_unknown_fields_only == True:
+                    pass
                 else:
-                    self.extracted_information[zone] = {'title': self.ocr_field(zone,'title', debug)}
+                    self.extracted_information[zone]['title'] = self.ocr_field(zone,'title', debug)
             if 'field' in self.zones[zone].keys():
-                self.extracted_information[zone] = {'field': self.ocr_field(zone,'field', debug)}
+                self.extracted_information[zone]['field'] = self.ocr_field(zone,'field', debug)
         return self.extracted_information
 
     def tune_preprocessing(self):
