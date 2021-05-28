@@ -1,9 +1,8 @@
 beautifulsoup4
 imutils
+flask_restful
+gunicorn
 matplotlib
-mkl-fft
-mkl-random
-mkl-service
 olefile
 opencv-python
 pdf2image
