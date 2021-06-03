@@ -54,7 +54,7 @@ class OCRRectoCNI (Resource):
             results = cni.export_ocr()
             # files are removed after use
             os.remove(full_filename)
-            data["text"] = str(results)
+            data["result"] = results
             data["success"] = True
         return data
 
