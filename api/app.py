@@ -44,7 +44,7 @@ class OCRRectoCNI (Resource):
         self.logger.debug(self.allowed_file(file.filename))
         if file and self.allowed_file(file.filename):
             filename = secure_filename(file.filename) #make sure we have a proper filename
-            self.logger.info(f'**found {filename}')
+            self.logger.debug(f'**found {filename}')
             full_filename = UPLOAD_DIRECTORY / filename
             file.save(full_filename) #saves file in folder
             cni = CNI(recto_path=full_filename)
@@ -52,6 +52,7 @@ class OCRRectoCNI (Resource):
             cni.clean_images()
             cni.extract_ocr()
             results = cni.export_ocr()
+            # files are removed after use
             os.remove(full_filename)
             data["text"] = str(results)
             data["success"] = True
