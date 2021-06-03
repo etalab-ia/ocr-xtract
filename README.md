@@ -30,11 +30,23 @@ For now, only a POC is avaible for extracting information for French DNI
 ### CNI
 Place a reference CNI in `/data` and point to it when creating a `CNI` class :
 ```Python
-from pathlib import Path
-cni = CNI(reference_image='data/CNI_ref.jpg')
-cni.load_image(image_path=Path('data/CNI_to_xtract.jpg'))
-cni.tune_preprocessing()
-results = cni.extract_ocr()
+from src.document.CNI import CNI
+cni = CNI(recto_path=filename)
+cni.align_images()
+cni.clean_images()
+cni.extract_ocr()
+results = cni.export_ocr()
+```
+
+### Using app (dev)
+Launch API using 
+```
+python api/app.py
+```
+
+Launch FRONT using
+```
+streamlit run front/app.py
 ```
 
 ## Contributing Lab IA Members
