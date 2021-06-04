@@ -8,6 +8,8 @@ opencv-python
 pdf2image
 pip-chill
 pytesseract
+scikit-optimize
 sip
 streamlit
+tqdm
 wincertstore
