@@ -154,7 +154,8 @@ class Image():
     def reset(self):
         self.__init__()
 
-    def tune_preprocessing(self):
+
+    def tune_preprocessing(self, debug=False):
         image = self
         dimensions = self.image_cleaner.get_dimensions()
         @use_named_args(dimensions=dimensions)
@@ -173,7 +174,13 @@ class Image():
             callback=LoggingCallback(n_calls),
             n_jobs=-1,
         )
-        return res # TODO pass the parameters to the self.image_cleaner
+
+        if debug == True:
+            plot_objective(res)
+            plt.show()
+
+        best_score = read_known_field(res.x) # Allow cleaning of the image with best config
+        return best_score
 
 
 
@@ -210,7 +217,5 @@ if __name__ == "__main__":
     image.clean()
     image.extract_ocr()
     image.quality_ocr()
-    res = image.tune_preprocessing()
-    plot_objective(res)
-    plt.show()
-    print(1)
+    best_score = image.tune_preprocessing()
+    print(best_score)
