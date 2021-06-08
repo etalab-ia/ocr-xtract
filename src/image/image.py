@@ -91,9 +91,9 @@ class Image():
         :return: self.image cleaned
         """
         if self.aligned_image is None:
-            self.align_images()
-
-        self.cleaned_image = self.image_cleaner.remove_noise_and_smooth(self.aligned_image)
+            self.align_images(debug=debug)
+        print('cleaning now')
+        self.cleaned_image = self.image_cleaner.remove_noise_and_smooth(self.aligned_image, debug=debug)
 
         # TODO : implement a check that the image was properly cleaned. If not, trigger self.tune_preprocessing
         if debug:
@@ -119,7 +119,7 @@ class Image():
 
     def extract_ocr(self, ocr_unknown_fields_only=False, debug=False):
         if self.cleaned_image is None:
-            self.clean()
+            self.clean(debug=debug)
 
         for zone in self.zones.keys():
             self.extracted_information[zone] = {}
@@ -139,6 +139,7 @@ class Image():
         self.extract_ocr()
         sum_quality = 0
         nb_zones = 0
+        min_f1 = 1
 
         for zone in self.extracted_information.keys():
             true_positives = shared_chars(self.extracted_information[zone]['title'],self.zones[zone]['value'])
@@ -146,9 +147,13 @@ class Image():
             false_negatives = len(self.zones[zone]['value']) - true_positives
             precision = true_positives / (true_positives + false_positives)
             recall = true_positives / (true_positives + false_negatives)
-            f1 = 2 * (precision * recall) / (precision + recall)
+            try:
+                f1 = 2 * (precision * recall) / (precision + recall)
+            except:
+                f1 = 0
             sum_quality += f1
             nb_zones += 1
+            min_f1 = min(min_f1, f1)
         return sum_quality / nb_zones
 
     def reset(self):
@@ -180,6 +185,7 @@ class Image():
             plt.show()
 
         best_score = read_known_field(res.x) # Allow cleaning of the image with best config
+        self.extract_ocr() # Extract with best config
         return best_score
 
 
@@ -212,10 +218,8 @@ class VersoCNI(Image):
 
 
 if __name__ == "__main__":
-    image = RectoCNI('data/CNI_caro3.jpg')
-    image.align_images()
-    image.clean()
+    image = RectoCNI(r'data\1acfa467-7687-455a-a780-7394d3b09d14.jpg')
+    # image = RectoCNI('data\CNI_caro3.jpg')
+    # best_score = image.tune_preprocessing()
+    image.clean(debug=True)
     image.extract_ocr()
-    image.quality_ocr()
-    best_score = image.tune_preprocessing()
-    print(best_score)
