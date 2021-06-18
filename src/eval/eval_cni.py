@@ -67,7 +67,6 @@ if __name__ == "__main__":
     sum_f1 = 0
     nb_f1 = 0
 
-
     for image_annotated in data:
         conditions = check_doc_type(image_annotated,'recto')
         annotated_image_path = Path('./data/'+image_annotated["file_upload"])
