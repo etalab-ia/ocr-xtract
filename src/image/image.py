@@ -12,6 +12,12 @@ from skopt.plots import plot_objective
 from src.image.remove_noise import ImageCleaning
 from src.image.utils_optimizer import LoggingCallback
 
+from doctr.documents import DocumentFile
+from doctr.models import ocr_predictor
+from doctr.utils.visualization import visualize_page
+
+from src.salaire.doctr_utils import WindowTransformer
+
 
 class Image():
     def __init__(self, image_path, reference_path=None):
@@ -30,6 +36,10 @@ class Image():
             print("Reference path does not exists")
         self.zones = {}
         self.extracted_information = {}
+        det_arch = "db_resnet50"
+        reco_arch = "crnn_vgg16_bn"
+        self.predictor = ocr_predictor(det_arch, reco_arch, pretrained=True)
+        self.windowtransformer = WindowTransformer()
 
     def load_image(self, image_path):
         return cv2.imread(str(image_path))
@@ -130,7 +140,18 @@ class Image():
                     self.extracted_information[zone]['title'] = self.ocr_field(zone,'title', debug)
             if 'field' in self.zones[zone].keys():
                 self.extracted_information[zone]['field'] = self.ocr_field(zone,'field', debug)
+
         return self.extracted_information
+
+    def extract_ocr_doctr(self, debug=False):
+        if self.aligned_image is None:
+            self.align_images(debug=debug)
+
+        doc = DocumentFile.from_images(self.aligned_image)
+        out = self.predictor(doc, training=False)
+        self.raw_doctr = out
+
+        return self.raw_doctr
 
     def quality_ocr(self):
         def shared_chars(s1, s2):
@@ -158,6 +179,13 @@ class Image():
 
     def reset(self):
         self.__init__()
+
+    def extract_information(self):
+        """
+        This function extracts information from raw doctr
+        :return:
+        """
+        self.raw_doctr
 
 
     def tune_preprocessing(self, debug=False):
@@ -205,7 +233,21 @@ class RectoCNI(Image):
             'nationalite_francaise': {'value': 'Nationalité Française', 'title': (920, 143, 1179, 180)},
             "carte_nationale": {'value': 'CARTE NATIONALE', 'title': (130, 160, 376, 192)}
         }
+        self.windowtransformer = WindowTransformer(horizontal=0, vertical=1)
         self.image_cleaner.tune_preprocessing()
+
+
+    def extract_information(self):
+        """
+        This function extracts information from raw doct
+        :return:
+        """
+        wtf = WindowTransformer(horizontal=1)
+        wtf.fit(self.raw_doctr)
+        neighbors = wtf.neighbors
+        #TODO : extraction information from neighbors
+
+
 
 class VersoCNI(Image):
     def __init__(self, image_path=None, reference_path='data/CNI_robin_verso.jpg'):
@@ -221,5 +263,7 @@ if __name__ == "__main__":
     image = RectoCNI(r'data\1acfa467-7687-455a-a780-7394d3b09d14.jpg')
     # image = RectoCNI('data\CNI_caro3.jpg')
     # best_score = image.tune_preprocessing()
-    image.clean(debug=True)
-    image.extract_ocr()
+    # image.clean(debug=True)
+    # image.extract_ocr()
+    image.extract_ocr_doctr()
+    image.extract_information()
