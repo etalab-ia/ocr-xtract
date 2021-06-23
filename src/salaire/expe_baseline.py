@@ -29,7 +29,7 @@ def create_windows(horizontal: int = 3, vertical: int = 3):
 def main(image_path: Path):
     doct_output = get_doctr_info(image_path)
     # doct_output.pages[0].blocks[0].lines[0].words
-    windower = WindowTransformer()
+    windower = WindowTransformer(line_eps=0.01)
     windower.fit_transform(doct_output.pages)
     # windower.get_sourrounding_words(id_box=10)
 

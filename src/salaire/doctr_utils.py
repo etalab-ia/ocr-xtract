@@ -1,104 +1,119 @@
 from pathlib import Path
 from pprint import pprint
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 import numpy as np
 from doctr.models import ocr_predictor
 from doctr.documents import DocumentFile, Page, Document, Word
+from sklearn.feature_extraction import DictVectorizer
 
 
 class PageExtended(Page):
     pass
 
 
-class WindowTransformer:
-    def __init__(self, horizontal: int = 3, vertical: int = 3, page_id: Optional[int] = None,
-                 line_threshold: int = 2):
+class WindowTransformer(DictVectorizer):
+    def __init__(self, horizontal: int = 3, vertical: int = 3, page_id: Optional[int] = None, line_eps: float = 2):
 
         # self.document = doctr_doc
         # self.document.pages[0].blocks[0].lines[0].words
+        super().__init__(sparse=False)
         self.neighbors = []
         self.n_horizontal = horizontal
         self.n_vertical = vertical
         self.coordinates_sorted_ids = []
         self.page_id = page_id
-        self.line_threshold = line_threshold
+        self.line_eps = line_eps
         self._features = None
+        self._list_same_line_arr = None
+        self._list_words_per_page = None
 
-        pass
+    def _get_neighbors(self, target_word_idx: int, target_word: Word, page_id: int):
+        same_line_indices = self._list_same_line_arr[page_id][target_word_idx].nonzero()[0]
+        same_line_words = list(self._list_words_per_page[page_id][same_line_indices])
+        same_line_words.append(target_word)
+        same_line_words = np.array(same_line_words)
+        same_line_x_min = [w.geometry[0][0] for w in same_line_words]
 
-    def _get_sorted_coordinates(self, document):
-        x_min, y_min = [], []
-        for pages in document:
-            for blocks in pages.blocks:
-                for lines in blocks.lines:
-                    for word in lines.words:
-                        x_min.append(word.geometry[0][0])
-                        y_min.append(word.geometry[0][0])
-            self.coordinates_sorted_ids.append([np.array(x_min).argsort(),
-                                                np.array(y_min).argsort()])
+        sorted_points_in_line = np.argsort(same_line_x_min)
+        target_word_idx_sorted = np.where(sorted_points_in_line == len(same_line_x_min) - 1)[0][0]
+        left_neighbor_points_indices = sorted_points_in_line[
+                                       max(0, target_word_idx_sorted - self.n_horizontal):target_word_idx_sorted]
+        right_neighbor_points_indices = sorted_points_in_line[
+                                        target_word_idx_sorted + 1: target_word_idx_sorted + self.n_horizontal]
+        left_neighbor_words = same_line_words[left_neighbor_points_indices]
+        right_neighbor_words = same_line_words[right_neighbor_points_indices]
+        return {"left": left_neighbor_words, "right": right_neighbor_words}
 
-    def _get_neighbors(self, target_word_idx: int, page_id: int, list_words: List[Word]):
-        sorted_x_min = self.coordinates_sorted_ids[page_id][0]
-        sorted_y_min = self.coordinates_sorted_ids[page_id][1]
-        target_word: Word = list_words[target_word_idx]
-        target_word_x_min = target_word.geometry[0][0]
-        target_word_y_min = target_word.geometry[0][1]
-        list_words.pop(target_word_idx)  # remove this word from the list
-        for word_id, word in enumerate(list_words):
-            current_word_x = word.geometry[0][0]
-            current_word_y = word.geometry[0][1]
-            if target_word_x_min == current_word_x and target_word_y_min == current_word_y:
-                continue
-            # we are in the same line within a given threshold (line_threshold)
-            if target_word_y_min - self.line_threshold < current_word_y < target_word_y_min + self.line_threshold:
-                # now we want to find the n_horizontal neighbors to the left
-                sorted_id = np.where(sorted_x_min == word_id)[0][0]
-                left_neighbors_ids = max(0, sorted_id - self.n_vertical)
-                right_neighbors_ids = min(len(list_words) - 1, sorted_id - self.n_horizontal)
-                pass
-            else:
-                continue
-
-    def _transform(self, X, fitting=False):
-        if fitting:
-            self._get_sorted_coordinates(X)
-            pass
+    def _transform(self, X, **kwargs):
+        self.fit(X)
 
         if self.page_id:
-            X = [X[self.page_id]]
+            self._list_words_per_page = [self._list_words_per_page[self.page_id]]
+            self._list_same_line_arr = [self._list_same_line_arr[self.page_id]]
 
-        min_x, min_y = [], []
+        features_dicts = []
 
-        for page_id, pages in enumerate(X):
-            for blocks in pages.blocks:
-                for lines in blocks.lines:
-                    for word_idx, word in enumerate(lines.words):
-                        self._get_neighbors(word_idx, page_id, lines.words)
-            #             min_x.append(word["geometry"][0][0])
-            #             min_y.append(word["geometry"][0][0])
-            # self.coordinates_sorted_ids.append([np.array(min_x).argsort(),
-            #                                     np.array(min_y).argsort()])
+        for page_id, page in enumerate(self._list_words_per_page):
+            for word_idx, word in enumerate(page):
+                neighbors = self._get_neighbors(word_idx, word, page_id)
+                features = self._get_neighbors_features(word, neighbors)
+                features_dicts.append(features)
+            X_matrix = super().fit_transform(features_dicts)
+            break  # TODO: in fact i should not deal with multiple pages :(
 
-        #
-        # sorted_box_x_idx = np.where(self.sorted_min_x == box_id)[0]
-        # sorted_box_y_idx = np.where(self.sorted_min_y == box_id)[0]
-        #
-        # window_left = max(0, sorted_box_x_idx - horizontal)
-        # window_right = sorted_box_x_idx + horizontal
-        # window_top = max(0, sorted_box_y_idx - vertical)
-        # window_bottom = sorted_box_y_idx + vertical
+        return X_matrix
 
-    def fit(self, X: Document):
-        self._get_sorted_coordinates(X)
+    def fit(self, X: List[Document], **kwargs):
+        # self._get_sorted_coordinates(X)
+        # get ALL Words of a page
+        # TODO: Treat more carefully the blocks and lines
+        list_words_per_page = []
+        for page_id, page in enumerate(X):
+            list_words = []
+            for block in page.blocks:
+                for line in block.lines:
+                    list_words.extend(line.words)
+            list_words_per_page.append(np.array(list_words))
+
+        list_same_line_arr = []
+        for page_id, words in enumerate(list_words_per_page):
+            is_in_line_arr = np.zeros((len(words),) * 2)
+            for i, word_i in enumerate(words[:-1]):
+                for j, word_j in enumerate(words[i + 1:]):
+                    if abs(word_j.geometry[0][1] - word_i.geometry[0][1]) < self.line_eps:
+                        is_in_line_arr[i, j + 1] = 1
+
+            list_same_line_arr.append(is_in_line_arr)
+            assert is_in_line_arr.shape[0] == len(words)
+
+        self._list_same_line_arr = list_same_line_arr
+        self._list_words_per_page = list_words_per_page
+
+        # vocabulary
+
         return self
 
     def transform(self, X):
-        return self._transform(X, fitting=False)
+        return self._transform(X)
 
-    def fit_transform(self, X: List[Page]):
-        return self._transform(X, fitting=True)
+    def fit_transform(self, X: List[Page], **kwargs):
+        return self._transform(X)
 
+    @staticmethod
+    def _get_neighbors_features(word, neighbors: Dict[str, List[Word]]):
+        features = {}
+        left_side_words = neighbors["left"]
+        right_side_words = neighbors["right"]
+        for id_word, word_neighbor in enumerate(left_side_words):
+            features[f"w{id_word - len(left_side_words)}:{word_neighbor.value.lower()}"] = 1
+
+        features[f"w:{word.value.lower()}"] = 1
+
+        for id_word, word_neighbor in enumerate(right_side_words):
+            features[f"w+{id_word + 1}:{word_neighbor.value.lower()}"] = 1
+
+        return features
 
 def extract_words(doctr_result: dict):
     words_dict = []
@@ -106,10 +121,6 @@ def extract_words(doctr_result: dict):
         words_dict.append(page["blocks"][0]["lines"][0]["words"])
 
     return words_dict
-
-
-def get_ordered_words(words_dict):
-    x_min_sorted, x_max_sorted, y_min_sorted = [], [], [], []
 
 
 def get_doctr_info(img_path: Path) -> Document:
