@@ -12,7 +12,9 @@ Runs a baseline info extraction system. The procedure is as follows:
 """
 
 from pathlib import Path
+from typing import List
 from pprint import pprint
+import numpy as np
 
 from doctr.models import ocr_predictor
 from doctr.documents import DocumentFile
@@ -22,23 +24,25 @@ from doctr_utils import get_doctr_info, extract_words, WindowTransformer
 IMG_PATH = "/data/dossierfacil/salary/notvalidated_png/68945ca2-1758-48d0-b2bd-4ebb056fa752.pdf-1.png"
 IMG_PATH = "data/CNI_caro2.jpg"
 IMG_PATH = "data/476922b7-0bdf-414c-a7ef-6c1a0c3618c9.jpg"
+IMG_LIST = ["data/CNI_caro2.jpg", "data/476922b7-0bdf-414c-a7ef-6c1a0c3618c9.jpg", "data/CNI_caro2.jpg"]
 
 def create_windows(horizontal: int = 3, vertical: int = 3):
     pass
 
 
-def main(image_path: Path):
-    doct_output = get_doctr_info(image_path) for image_path in list
+def main(image_list: List[Path]):
+    doct_output = [get_doctr_info(image_path) for image_path in image_list]
     # doct_output.pages[0].blocks[0].lines[0].words
     windower = WindowTransformer(line_eps=0.01)
-    windower.fit([doct_output])
-    windower._transform([doct_output])
+    windower.fit(doct_output)
+    windower._transform(doct_output)
+    np.savetxt('./data/annotation.csv', windower._list_words_in_page, delimiter=",", fmt='%s')
     # windower.get_sourrounding_words(id_box=10)
     pass
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    main(IMG_PATH)
+    main(IMG_LIST)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
