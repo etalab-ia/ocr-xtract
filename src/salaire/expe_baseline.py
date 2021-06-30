@@ -33,8 +33,7 @@ def main(image_path: Path):
     windower.fit([doct_output])
     windower._transform([doct_output])
     # windower.get_sourrounding_words(id_box=10)
-
-pass
+    pass
 
 
 # Press the green button in the gutter to run the script.

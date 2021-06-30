@@ -58,19 +58,24 @@ class WindowTransformer(DictVectorizer):
                 for block in page.blocks:
                     for line in block.lines:
                         list_words_in_page.extend(line.words)
+                list_plain_words_in_page = [word.value for word in list_words_in_page]
 
                 vocab = self.vocab
                 array_angles = np.ones((len(vocab),len(list_words_in_page))) * 5 # false value for angle
                 array_distances = np.zeros((len(vocab),len(list_words_in_page))) # max distance
-                for i, word_i in enumerate(vocab):
-                    if word_i in [word.value for word in list_words_in_page]:
-                        wi = [word.value for word in list_words_in_page].index(word_i)
-                        word_i = list_words_in_page[wi]
-                        for j, word_j in enumerate(list_words_in_page):
-                            x_i, y_i = word_i.geometry[0]
-                            x_j, y_j = word_j.geometry[0]
-                            array_angles[i,j] = np.arctan((y_j-y_i)/(x_j-x_i) if (x_j-x_i) !=0 else 0)
-                            array_distances[i,j] = cosine(word_i.geometry[0], word_j.geometry[0])
+
+                for i, vocab_i in enumerate(vocab):
+                    if vocab_i in list_plain_words_in_page:
+                        wi_list = [i for i, x in enumerate(list_plain_words_in_page) if x == word_i]
+                        for wi in wi_list:
+                            word_i = list_words_in_page[wi] # associate the vocab_i to a word that is in the document
+                            for j, word_j in enumerate(list_words_in_page):
+                                x_i, y_i = word_i.geometry[0]
+                                x_j, y_j = word_j.geometry[0]
+                                distance = cosine(word_i.geometry[0], word_j.geometry[0])
+                                if distance < array_distances[i,j]: # in case there are several identical duplicate of vocab i, take the closest
+                                    array_angles[i,j] = np.arctan((y_j-y_i)/(x_j-x_i) if (x_j-x_i) !=0 else 0)
+                                    array_distances[i,j] = distance
                     else:
                         print(f'--------------------{word_i}')
                         print([word.value for word in list_words_in_page])
@@ -101,6 +106,7 @@ class WindowTransformer(DictVectorizer):
         #
         # self.vectorizer = vectorizer
         # self.vocab = vectorizer.get_feature_names()
+        self.list_word = list_words
         self.vocab = [k for k, v in Counter(list_words).items() if v >= 1]
         return self
 
