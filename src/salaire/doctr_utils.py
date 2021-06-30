@@ -78,14 +78,16 @@ class WindowTransformer(DictVectorizer):
                                     array_angles[i,j] = np.arctan((y_j-y_i)/(x_j-x_i) if (x_j-x_i) !=0 else 0)
                                     array_distances[i,j] = distance
                     else:
-                        print(f'--------------------{word_i}')
-                        print([word.value for word in list_words_in_page])
+                        print(f'--------------vocab------{vocab_i}')
+                        print('not in page')
+                        print(list_plain_words_in_page)
 
                 list_array_angle.append(array_angles)
                 list_array_distance.append(array_distances)
         self.array_angle = np.hstack(list_array_angle)
         self.array_distances = np.hstack(list_array_distance)
-
+        self.array = np.concatenate([self.array_angle, self.array_distances])
+        self._feature_names = [a + '_angle' for a in self.vocab] + [a + '_distance' for a in self.vocab]
         return self
 
     def fit(self, X: List[Document], **kwargs):
