@@ -55,10 +55,7 @@ class WindowTransformer(DictVectorizer):
         list_array_distance = []
         for doc in doct_documents:
             for page_id, page in enumerate(doc.pages):
-                list_words_in_page = []
-                for block in page.blocks:
-                    for line in block.lines:
-                        list_words_in_page.extend(line.words)
+                list_words_in_page = get_list_words_in_page(page)
                 list_plain_words_in_page = [word.value for word in list_words_in_page]
 
                 vocab = self.vocab
@@ -88,6 +85,7 @@ class WindowTransformer(DictVectorizer):
         self.array_distances = np.hstack(list_array_distance)
         self.array = np.concatenate([self.array_angle, self.array_distances])
         self._feature_names = [a + '_angle' for a in self.vocab] + [a + '_distance' for a in self.vocab]
+        # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return self
 
     def fit(self, doctr_documents: List[Document], **kwargs):
@@ -98,9 +96,7 @@ class WindowTransformer(DictVectorizer):
         list_words = []
         for doc in doctr_documents:
             for page_id, page in enumerate(doc.pages):
-                for block in page.blocks:
-                    for line in block.lines:
-                        list_words.extend([word.value for word in line.words])
+                list_words.extend(get_list_words_in_page(page))
 
         # vectorizer = CountVectorizer(min_df=1)
         # vectorizer.fit(list_words)
@@ -111,12 +107,8 @@ class WindowTransformer(DictVectorizer):
         self.vocab = [k for k, v in Counter(list_words).items() if v >= 1]
         return self
 
-    def transform(self, raw_documents: List[Path]):
-        if isinstance(raw_documents, Path):
-            raw_documents = [raw_documents]
-        doctr_documents = self._get_doctr_docs(raw_documents)
-
-        return self._transform(doctr_documents)
+    def transform(self, X: List[Document]):
+        return self._transform(X)
 
     def _get_doctr_docs(self, raw_documents: List[Path]):
         list_doctr_docs = []
@@ -140,10 +132,8 @@ class WindowTransformer(DictVectorizer):
                 list_doctr_docs.append(res_doctr)
         return list_doctr_docs
 
-    def fit_transform(self, X: List[Path], **kwargs):
-
-
-
+    def fit_transform(self, X:List[Document], **kwargs):
+        self.fit(X)
         return self._transform(X)
 
     @staticmethod
@@ -175,3 +165,10 @@ def get_doctr_info(img_path: Path) -> Document:
     result = model(doc, training=False)
     # result.show(doc)
     return result
+
+def get_list_words_in_page(page: Document):
+    list_words_in_page = []
+    for block in page.blocks:
+        for line in block.lines:
+            list_words_in_page.extend(line.words)
+    return list_words_in_page

@@ -20,14 +20,15 @@ from doctr.documents import DocumentFile
 from doctr_utils import get_doctr_info, extract_words, WindowTransformer
 
 IMG_PATH = "/data/dossierfacil/salary/notvalidated_png/68945ca2-1758-48d0-b2bd-4ebb056fa752.pdf-1.png"
-IMG_PATH = "data/CNI_robin.jpg"
+IMG_PATH = "data/CNI_caro2.jpg"
+IMG_PATH = "data/476922b7-0bdf-414c-a7ef-6c1a0c3618c9.jpg"
 
 def create_windows(horizontal: int = 3, vertical: int = 3):
     pass
 
 
 def main(image_path: Path):
-    doct_output = get_doctr_info(image_path)
+    doct_output = get_doctr_info(image_path) for image_path in list
     # doct_output.pages[0].blocks[0].lines[0].words
     windower = WindowTransformer(line_eps=0.01)
     windower.fit([doct_output])

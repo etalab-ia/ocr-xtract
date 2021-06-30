@@ -243,7 +243,7 @@ class RectoCNI(Image):
         :return:
         """
         wtf = WindowTransformer(horizontal=1)
-        wtf.fit(self.raw_doctr)
+        wtf.fit_transform(self.raw_doctr)
         neighbors = wtf.neighbors
         #TODO : extraction information from neighbors
 
@@ -261,7 +261,7 @@ class VersoCNI(Image):
 
 if __name__ == "__main__":
     image = RectoCNI(r'data\1acfa467-7687-455a-a780-7394d3b09d14.jpg')
-    # image = RectoCNI('data\CNI_caro3.jpg')
+    image = RectoCNI('data\CNI_caro2.jpg')
     # best_score = image.tune_preprocessing()
     # image.clean(debug=True)
     # image.extract_ocr()
