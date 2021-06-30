@@ -48,12 +48,12 @@ class WindowTransformer(DictVectorizer):
         right_neighbor_words = same_line_words[right_neighbor_points_indices]
         return {"left": left_neighbor_words, "right": right_neighbor_words}
 
-    def _transform(self, X: List[Document], **kwargs):
-        if not isinstance(X, list):
-            X = [X]
+    def _transform(self, doct_documents: List[Document], **kwargs):
+        if not isinstance(doct_documents, list):
+            doct_documents = [doct_documents]
         list_array_angle = []
         list_array_distance = []
-        for doc in X:
+        for doc in doct_documents:
             for page_id, page in enumerate(doc.pages):
                 list_words_in_page = []
                 for block in page.blocks:
@@ -90,16 +90,13 @@ class WindowTransformer(DictVectorizer):
         self._feature_names = [a + '_angle' for a in self.vocab] + [a + '_distance' for a in self.vocab]
         return self
 
-    def fit(self, X: List[Document], **kwargs):
+    def fit(self, doctr_documents: List[Document], **kwargs):
         # self._get_sorted_coordinates(X)
         # get ALL Words of a page
-        # TODO: Treat more carefully the blocks and lines
-
-        if not isinstance(X, list):
-            X = [X]
-
+        if not isinstance(doctr_documents, list):
+            doctr_documents = [doctr_documents]
         list_words = []
-        for doc in X:
+        for doc in doctr_documents:
             for page_id, page in enumerate(doc.pages):
                 for block in page.blocks:
                     for line in block.lines:
@@ -110,16 +107,43 @@ class WindowTransformer(DictVectorizer):
         #
         # self.vectorizer = vectorizer
         # self.vocab = vectorizer.get_feature_names()
-
         self.list_word = list_words
         self.vocab = [k for k, v in Counter(list_words).items() if v >= 1]
         return self
 
-    def transform(self, X):
-        return self._transform(X)
+    def transform(self, raw_documents: List[Path]):
+        if isinstance(raw_documents, Path):
+            raw_documents = [raw_documents]
+        doctr_documents = self._get_doctr_docs(raw_documents)
 
-    def fit_transform(self, X: List[Page], **kwargs):
-        self.fit(X)
+        return self._transform(doctr_documents)
+
+    def _get_doctr_docs(self, raw_documents: List[Path]):
+        list_doctr_docs = []
+        if not hasattr(self, "doctr_model"):
+            self.doctr_model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
+
+        for doc in raw_documents:
+            if not doc.exists():
+                print(f"Doc {doc} could not be found.")
+                continue
+            res_doctr = None
+            try:
+                if doc.suffix == "pdf":
+                    doc_doctr = DocumentFile.from_pdf(doc)
+                else:
+                    doc_doctr = DocumentFile.from_images(doc)
+                res_doctr = self.doctr_model(doc_doctr, training=False)
+            except Exception as e:
+                print(f"Could not analyze document {doc}. Error: {e}")
+            if res_doctr:
+                list_doctr_docs.append(res_doctr)
+        return list_doctr_docs
+
+    def fit_transform(self, X: List[Path], **kwargs):
+
+
+
         return self._transform(X)
 
     @staticmethod
