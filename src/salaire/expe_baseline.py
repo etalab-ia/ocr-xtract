@@ -21,8 +21,6 @@ from doctr_utils import get_doctr_info, extract_words, WindowTransformer
 from src.salaire.annotation_utils import DoctrTransformer, AnnotationDatasetCreator
 
 IMG_PATH = "/data/dossierfacil/salary/notvalidated_png/68945ca2-1758-48d0-b2bd-4ebb056fa752.pdf-1.png"
-IMG_PATH = "data/CNI_caro2.jpg"
-IMG_PATH = "data/476922b7-0bdf-414c-a7ef-6c1a0c3618c9.jpg"
 IMG_FOLDER_PATH = Path("./data/CNI")
 TRAINING_DATA_PATH = Path("./data/training_data/cni_annotation.csv")
 def main():
@@ -30,16 +28,10 @@ def main():
     doctr_documents = DoctrTransformer().transform(list_img_paths)
     dataset_creator = AnnotationDatasetCreator(output_path=TRAINING_DATA_PATH, raw_documents=list_img_paths)
     dataset_creator.transform(doctr_documents)
-    exit(0)
 
-
-    # doct_output = get_doctr_info(image_path) for image_path in list
-    # doct_output.pages[0].blocks[0].lines[0].words
-    windower = WindowTransformer(line_eps=0.01)
-    windower.fit(doctr_documents)
-    windower._transform(doctr_documents)
-    # windower.get_sourrounding_words(id_box=10)
-    pass
+    # windower = WindowTransformer(line_eps=0.01)
+    # windower.fit(doctr_documents)
+    # windower._transform(doctr_documents)
 
 
 # Press the green button in the gutter to run the script.
