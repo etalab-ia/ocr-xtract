@@ -48,12 +48,12 @@ class WindowTransformer(DictVectorizer):
         right_neighbor_words = same_line_words[right_neighbor_points_indices]
         return {"left": left_neighbor_words, "right": right_neighbor_words}
 
-    def _transform(self, doct_documents: List[Document], **kwargs):
-        if not isinstance(doct_documents, list):
-            doct_documents = [doct_documents]
+    def _transform(self, X: List[Document], **kwargs):
+        if not isinstance(X, list):
+            X = [X]
         list_array_angle = []
         list_array_distance = []
-        for doc in doct_documents:
+        for doc in X:
             for page_id, page in enumerate(doc.pages):
                 list_words_in_page = []
                 for block in page.blocks:
@@ -91,8 +91,11 @@ class WindowTransformer(DictVectorizer):
     def fit(self, doctr_documents: List[Document], **kwargs):
         # self._get_sorted_coordinates(X)
         # get ALL Words of a page
-        if not isinstance(doctr_documents, list):
-            doctr_documents = [doctr_documents]
+        # TODO: Treat more carefully the blocks and lines
+
+        if not isinstance(X, list):
+            X = [X]
+
         list_words = []
         for doc in doctr_documents:
             for page_id, page in enumerate(doc.pages):
@@ -105,6 +108,7 @@ class WindowTransformer(DictVectorizer):
         #
         # self.vectorizer = vectorizer
         # self.vocab = vectorizer.get_feature_names()
+
         self.list_word = list_words
         self.vocab = [k for k, v in Counter(list_words).items() if v >= 1]
         return self
@@ -142,6 +146,11 @@ class WindowTransformer(DictVectorizer):
 
 
 
+<<<<<<< Updated upstream
+    def fit_transform(self, X: List[Page], **kwargs):
+        self.fit(X)
+=======
+>>>>>>> Stashed changes
         return self._transform(X)
 
     @staticmethod
