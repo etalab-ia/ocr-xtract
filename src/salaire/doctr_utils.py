@@ -49,7 +49,8 @@ class WindowTransformer(DictVectorizer):
         return {"left": left_neighbor_words, "right": right_neighbor_words}
 
     def _transform(self, X: List[Document], **kwargs):
-        # todo check X is list or not
+        if not isinstance(X, list):
+            X = [X]
         list_array_angle = []
         list_array_distance = []
         for doc in X:
@@ -92,7 +93,8 @@ class WindowTransformer(DictVectorizer):
         # get ALL Words of a page
         # TODO: Treat more carefully the blocks and lines
 
-        # TODO check if X is [] or Doc : if doc, then [doc]
+        if not isinstance(X, list):
+            X = [X]
 
         list_words = []
         for doc in X:
@@ -106,6 +108,7 @@ class WindowTransformer(DictVectorizer):
         #
         # self.vectorizer = vectorizer
         # self.vocab = vectorizer.get_feature_names()
+
         self.list_word = list_words
         self.vocab = [k for k, v in Counter(list_words).items() if v >= 1]
         return self
@@ -114,6 +117,7 @@ class WindowTransformer(DictVectorizer):
         return self._transform(X)
 
     def fit_transform(self, X: List[Page], **kwargs):
+        self.fit(X)
         return self._transform(X)
 
     @staticmethod
