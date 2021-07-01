@@ -30,6 +30,7 @@ class WindowTransformer(DictVectorizer):
         self._features = None
         self._list_same_line_arr = None
         self._list_words_per_page = None
+        self._list_words_in_page = []
 
     def _get_neighbors(self, target_word_idx: int, target_word: Word, page_id: int):
         same_line_indices = self._list_same_line_arr[page_id][target_word_idx].nonzero()[0]
@@ -57,6 +58,7 @@ class WindowTransformer(DictVectorizer):
             for page_id, page in enumerate(doc.pages):
                 list_words_in_page = get_list_words_in_page(page)
                 list_plain_words_in_page = [word.value for word in list_words_in_page]
+                self._list_words_in_page.extend(list_plain_words_in_page)
 
                 vocab = self.vocab
                 array_angles = np.ones((len(vocab), len(list_words_in_page))) * 5  # false value for angle
@@ -64,7 +66,7 @@ class WindowTransformer(DictVectorizer):
 
                 for i, vocab_i in enumerate(vocab):
                     if vocab_i in list_plain_words_in_page:
-                        wi_list = [i for i, x in enumerate(list_plain_words_in_page) if x == word_i]
+                        wi_list = [i for i, x in enumerate(list_plain_words_in_page) if x == vocab_i]
                         for wi in wi_list:
                             word_i = list_words_in_page[wi]  # associate the vocab_i to a word that is in the document
                             for j, word_j in enumerate(list_words_in_page):
@@ -76,9 +78,8 @@ class WindowTransformer(DictVectorizer):
                                     array_angles[i, j] = np.arctan((y_j - y_i) / (x_j - x_i) if (x_j - x_i) != 0 else 0)
                                     array_distances[i, j] = distance
                     else:
-                        print(f'--------------vocab------{vocab_i}')
-                        print('not in page')
-                        print(list_plain_words_in_page)
+                        print(f'--------------vocab------{vocab_i} not in page')
+
 
                 list_array_angle.append(array_angles)
                 list_array_distance.append(array_distances)
@@ -86,6 +87,7 @@ class WindowTransformer(DictVectorizer):
         self.array_distances = np.hstack(list_array_distance)
         self.array = np.concatenate([self.array_angle, self.array_distances])
         self._feature_names = [a + '_angle' for a in self.vocab] + [a + '_distance' for a in self.vocab]
+
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return self
 
@@ -104,8 +106,8 @@ class WindowTransformer(DictVectorizer):
         #
         # self.vectorizer = vectorizer
         # self.vocab = vectorizer.get_feature_names()
-        self.list_word = list_words
-        self.vocab = [k for k, v in Counter(list_words).items() if v >= 1]
+        self.list_word = [word.value for word in list_words]
+        self.vocab = [k for k, v in Counter(self.list_word).items() if v >= 2]
         return self
 
     def transform(self, X: List[Document]):
