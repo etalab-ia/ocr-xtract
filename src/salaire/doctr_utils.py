@@ -61,21 +61,22 @@ class WindowTransformer(DictVectorizer):
                 self._list_words_in_page.extend(list_plain_words_in_page)
 
                 vocab = self.vocab
-                array_angles = np.ones((len(vocab),len(list_words_in_page))) * 5 # false value for angle
-                array_distances = np.zeros((len(vocab),len(list_words_in_page))) # max distance
+                array_angles = np.ones((len(vocab), len(list_words_in_page))) * 5  # false value for angle
+                array_distances = np.zeros((len(vocab), len(list_words_in_page)))  # max distance
 
                 for i, vocab_i in enumerate(vocab):
                     if vocab_i in list_plain_words_in_page:
                         wi_list = [i for i, x in enumerate(list_plain_words_in_page) if x == vocab_i]
                         for wi in wi_list:
-                            word_i = list_words_in_page[wi] # associate the vocab_i to a word that is in the document
+                            word_i = list_words_in_page[wi]  # associate the vocab_i to a word that is in the document
                             for j, word_j in enumerate(list_words_in_page):
                                 x_i, y_i = word_i.geometry[0]
                                 x_j, y_j = word_j.geometry[0]
                                 distance = cosine(word_i.geometry[0], word_j.geometry[0])
-                                if distance < array_distances[i,j]: # in case there are several identical duplicate of vocab i, take the closest
-                                    array_angles[i,j] = np.arctan((y_j-y_i)/(x_j-x_i) if (x_j-x_i) !=0 else 0)
-                                    array_distances[i,j] = distance
+                                if distance < array_distances[
+                                    i, j]:  # in case there are several identical duplicate of vocab i, take the closest
+                                    array_angles[i, j] = np.arctan((y_j - y_i) / (x_j - x_i) if (x_j - x_i) != 0 else 0)
+                                    array_distances[i, j] = distance
                     else:
                         print(f'--------------vocab------{vocab_i} not in page')
 
@@ -134,7 +135,7 @@ class WindowTransformer(DictVectorizer):
                 list_doctr_docs.append(res_doctr)
         return list_doctr_docs
 
-    def fit_transform(self, X:List[Document], **kwargs):
+    def fit_transform(self, X: List[Document], **kwargs):
         self.fit(X)
         return self._transform(X)
 
@@ -153,6 +154,7 @@ class WindowTransformer(DictVectorizer):
 
         return features
 
+
 def extract_words(doctr_result: dict):
     words_dict = []
     for page in doctr_result["pages"]:
@@ -167,6 +169,7 @@ def get_doctr_info(img_path: Path) -> Document:
     result = model(doc, training=False)
     # result.show(doc)
     return result
+
 
 def get_list_words_in_page(page: Document):
     list_words_in_page = []
