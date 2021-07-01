@@ -1,13 +1,10 @@
 from collections import Counter
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, List
 
-import numpy as np
 import pandas as pd
 from doctr.models import ocr_predictor
-from doctr.documents import DocumentFile, Page, Document, Word
-from sklearn.feature_extraction import DictVectorizer
-from scipy.spatial.distance import cosine
+from doctr.documents import DocumentFile, Document
 
 from src.salaire.doctr_utils import get_list_words_in_page
 
@@ -20,6 +17,7 @@ class DoctrTransformer:
         return self
 
     def transform(self, raw_documents):
+
         doctr_documents = self._get_doctr_docs(raw_documents=raw_documents)
         return doctr_documents
 
@@ -47,9 +45,10 @@ class DoctrTransformer:
 
 
 class AnnotationDatasetCreator:
-    def __init__(self, output_path: Path, raw_documents: Optional[List[Path]] = None):
+    def __init__(self, output_path: Path, raw_documents: Optional[List[Path]] = None, sep: str = "\t"):
         self.output_path = output_path
         self.raw_documents = raw_documents
+        self.sep = sep
 
     def fit(self, doctr_documents: List[Path], **kwargs):
         return self
@@ -76,4 +75,4 @@ class AnnotationDatasetCreator:
                     dict_info["label"] = "O"
                     list_lines_dicts.append(dict_info)
         annotation_df = pd.DataFrame(list_lines_dicts)
-        annotation_df.to_csv(self.output_path, index=False)
+        annotation_df.to_csv(self.output_path, index=False, sep=self.sep)

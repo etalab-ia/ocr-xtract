@@ -12,7 +12,6 @@ Runs a baseline info extraction system. The procedure is as follows:
 """
 import glob
 from pathlib import Path
-from pprint import pprint
 
 from doctr.models import ocr_predictor
 from doctr.documents import DocumentFile
@@ -21,8 +20,10 @@ from doctr_utils import get_doctr_info, extract_words, WindowTransformer
 from src.salaire.annotation_utils import DoctrTransformer, AnnotationDatasetCreator
 
 IMG_PATH = "/data/dossierfacil/salary/notvalidated_png/68945ca2-1758-48d0-b2bd-4ebb056fa752.pdf-1.png"
-IMG_FOLDER_PATH = Path("./data/CNI")
-TRAINING_DATA_PATH = Path("./data/training_data/cni_annotation.csv")
+IMG_FOLDER_PATH = Path("/data/dossierfacil/CNI_recto/train")
+TRAINING_DATA_PATH = Path("./data/training_data/cni_annotation_recto_train.csv")
+
+
 def main():
     list_img_paths = list(sorted([f for f in IMG_FOLDER_PATH.iterdir() if f.suffix in [".jpg", ".png"]]))
     doctr_documents = DoctrTransformer().transform(list_img_paths)
