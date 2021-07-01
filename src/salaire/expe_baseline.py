@@ -12,7 +12,9 @@ Runs a baseline info extraction system. The procedure is as follows:
 """
 import glob
 from pathlib import Path
+from typing import List
 from pprint import pprint
+import numpy as np
 
 from doctr.models import ocr_predictor
 from doctr.documents import DocumentFile
@@ -34,8 +36,10 @@ def main():
     # windower._transform(doctr_documents)
 
 
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()
+
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
