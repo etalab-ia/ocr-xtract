@@ -16,7 +16,7 @@ from doctr.documents import DocumentFile
 from doctr.models import ocr_predictor
 from doctr.utils.visualization import visualize_page
 
-from src.salaire.doctr_utils import WindowTransformer
+from src.salaire.doctr_utils import WindowTransformerList
 
 
 class Image():
@@ -38,14 +38,19 @@ class Image():
         self.extracted_information = {}
         det_arch = "db_resnet50"
         reco_arch = "crnn_vgg16_bn"
-        self.predictor = ocr_predictor(det_arch, reco_arch, pretrained=True)
-        self.windowtransformer = WindowTransformer()
+        # self.predictor = ocr_predictor(det_arch, reco_arch, pretrained=True)
+        # self.windowtransformer = WindowTransformerList()
 
     def load_image(self, image_path):
         return cv2.imread(str(image_path))
 
-    def save(self):
-        pass
+    def save(self, image_path):
+        if self.aligned_image is not None:
+            cv2.imwrite(image_path, self.aligned_image)
+        elif self.cleaned_image is not None:
+            cv2.imwrite(image_path, self.cleaned_image)
+        else:
+            cv2.imwrite(image_path, self.original_image)
 
     def align_images(self, debug=False):
         if type(self.original_image) is not None:
@@ -233,8 +238,7 @@ class RectoCNI(Image):
             'nationalite_francaise': {'value': 'Nationalité Française', 'title': (920, 143, 1179, 180)},
             "carte_nationale": {'value': 'CARTE NATIONALE', 'title': (130, 160, 376, 192)}
         }
-        self.windowtransformer = WindowTransformer(horizontal=0, vertical=1)
-        self.image_cleaner.tune_preprocessing()
+        # self.image_cleaner.tune_preprocessing()
 
 
     def extract_information(self):
