@@ -10,10 +10,10 @@ if uploaded_file:
     f = requests.post(url, files=files)
     if f:
         response = f.json()
-        response = response['result']['RectoCNI'][0]
-        nom = response['nom']
-        prenom = response['prenom']
-        date = response['date_de_naissance']
+        response = response['result']
+        nom = str(response['nom']['field'])
+        prenom = str(response['prenom']['field'])
+        date = str(response['date_naissance']['field'])
         st.markdown(f'**Nom:** {nom}')
         st.markdown(f'**Prénom:** {prenom}')
         st.markdown(f'**Date de Naissance:** {date}')
