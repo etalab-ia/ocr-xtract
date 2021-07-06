@@ -1,9 +1,19 @@
+import os
+import pickle
+import shutil
+from tempfile import TemporaryFile, mkdtemp
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import pytesseract
 from pathlib import Path
 from collections import Counter
+
+import PIL as pil
+
+from doctr.documents import DocumentFile
+from joblib import load
 
 from skopt import dump, gp_minimize
 from skopt.utils import use_named_args
@@ -12,11 +22,9 @@ from skopt.plots import plot_objective
 from src.image.remove_noise import ImageCleaning
 from src.image.utils_optimizer import LoggingCallback
 
-from doctr.documents import DocumentFile
-from doctr.models import ocr_predictor
-from doctr.utils.visualization import visualize_page
-
+from src.salaire.annotation_utils import DoctrTransformer, AnnotationDatasetCreator
 from src.salaire.doctr_utils import WindowTransformerList
+
 
 
 class Image():
@@ -36,10 +44,10 @@ class Image():
             print("Reference path does not exists")
         self.zones = {}
         self.extracted_information = {}
-        det_arch = "db_resnet50"
-        reco_arch = "crnn_vgg16_bn"
-        # self.predictor = ocr_predictor(det_arch, reco_arch, pretrained=True)
-        # self.windowtransformer = WindowTransformerList()
+        self.doctr_transformer = DoctrTransformer()
+        self.annotation = AnnotationDatasetCreator()
+        self.classifier = None
+        self.label_binarizer = None
 
     def load_image(self, image_path):
         return cv2.imread(str(image_path))
@@ -142,21 +150,34 @@ class Image():
                 if ocr_unknown_fields_only == True:
                     pass
                 else:
-                    self.extracted_information[zone]['title'] = self.ocr_field(zone,'title', debug)
+                    self.extracted_information[zone]['title'] = [self.ocr_field(zone,'title', debug)]
             if 'field' in self.zones[zone].keys():
-                self.extracted_information[zone]['field'] = self.ocr_field(zone,'field', debug)
+                self.extracted_information[zone]['field'] = [self.ocr_field(zone,'field', debug)]
 
         return self.extracted_information
 
-    def extract_ocr_doctr(self, debug=False):
+    def extract_information(self, debug=False):
         if self.aligned_image is None:
             self.align_images(debug=debug)
 
-        doc = DocumentFile.from_images(self.aligned_image)
-        out = self.predictor(doc, training=False)
-        self.raw_doctr = out
-
-        return self.raw_doctr
+        temp_folder = mkdtemp()
+        cv2.imwrite(os.path.join(temp_folder, 'temp.jpg'), self.aligned_image)
+        doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))])
+        dataset_creator = AnnotationDatasetCreator()
+        X = dataset_creator.transform(doc)
+        shutil.rmtree(temp_folder)
+        y = self.classifier.predict(X)
+        y = self.label_binarizer.inverse_transform(y)
+        y_list = y.tolist()
+        list_words = X.word.to_list()
+        for w, l in zip(list_words,y_list):
+            if l != 'O':
+                if l not in self.extracted_information.keys():
+                    self.extracted_information[l] = {}
+                    self.extracted_information[l]['field'] = [w]
+                else:
+                    self.extracted_information[l]['field'].append(w)
+        return self.extracted_information
 
     def quality_ocr(self):
         def shared_chars(s1, s2):
@@ -185,12 +206,6 @@ class Image():
     def reset(self):
         self.__init__()
 
-    def extract_information(self):
-        """
-        This function extracts information from raw doctr
-        :return:
-        """
-        self.raw_doctr
 
 
     def tune_preprocessing(self, debug=False):
@@ -238,19 +253,10 @@ class RectoCNI(Image):
             'nationalite_francaise': {'value': 'Nationalité Française', 'title': (920, 143, 1179, 180)},
             "carte_nationale": {'value': 'CARTE NATIONALE', 'title': (130, 160, 376, 192)}
         }
-        # self.image_cleaner.tune_preprocessing()
-
-
-    def extract_information(self):
-        """
-        This function extracts information from raw doct
-        :return:
-        """
-        wtf = WindowTransformer(horizontal=1)
-        wtf.fit_transform(self.raw_doctr)
-        neighbors = wtf.neighbors
-        #TODO : extraction information from neighbors
-
+        with open("./model/CNI_model", 'rb') as data_model:
+            self.classifier = pickle.load(data_model)
+        with open("./model/CNI_label", 'rb') as data_lb:
+            self.label_binarizer = pickle.load(data_lb)
 
 
 class VersoCNI(Image):
@@ -269,5 +275,4 @@ if __name__ == "__main__":
     # best_score = image.tune_preprocessing()
     # image.clean(debug=True)
     # image.extract_ocr()
-    image.extract_ocr_doctr()
     image.extract_information()

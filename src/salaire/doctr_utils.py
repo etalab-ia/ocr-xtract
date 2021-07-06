@@ -62,7 +62,7 @@ class WindowTransformerList(DictVectorizer):
         self._feature_names = [str(a) + '_angle' for a in self.vocab] + [str(a)  + '_distance' for a in self.vocab]
 
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
-        return self.array
+        return np.transpose(self.array)
 
     def fit(self, doctr_documents: pd.DataFrame, **kwargs):
         self.list_words = [str(doc) for doc in doctr_documents['word'].to_list()]
@@ -101,7 +101,7 @@ class WindowTransformerList(DictVectorizer):
                 list_doctr_docs.append(res_doctr)
         return list_doctr_docs
 
-    def fit_transform(self, X: List[Document], **kwargs):
+    def fit_transform(self, X: List[Document],y = None, **kwargs):
         self.fit(X)
         return self._transform(X)
 

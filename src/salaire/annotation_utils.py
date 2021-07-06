@@ -17,7 +17,6 @@ class DoctrTransformer:
         return self
 
     def transform(self, raw_documents):
-
         doctr_documents = self._get_doctr_docs(raw_documents=raw_documents)
         return doctr_documents
 
@@ -45,7 +44,7 @@ class DoctrTransformer:
 
 
 class AnnotationDatasetCreator:
-    def __init__(self, output_path: Path, raw_documents: Optional[List[Path]] = None, sep: str = "\t"):
+    def __init__(self, output_path: Path = None, raw_documents: Optional[List[Path]] = None, sep: str = "\t"):
         self.output_path = output_path
         self.raw_documents = raw_documents
         self.sep = sep
@@ -54,9 +53,10 @@ class AnnotationDatasetCreator:
         return self
 
     def transform(self, doctr_documents: List[Document]):
-
+        doc_name_fake = 0
         list_lines_dicts = []
         for doc_id, doc in enumerate(doctr_documents):
+            doc_name_fake += 1
             for page_id, page in enumerate(doc.pages):
                 list_words_in_page = get_list_words_in_page(page)
                 for word in list_words_in_page:
@@ -72,7 +72,11 @@ class AnnotationDatasetCreator:
                     if self.raw_documents:
                         doc_name = self.raw_documents[doc_id].name
                         dict_info.update({"document_name": doc_name})
+                    else:
+                        dict_info.update({"document_name": doc_name_fake})
                     dict_info["label"] = "O"
                     list_lines_dicts.append(dict_info)
         annotation_df = pd.DataFrame(list_lines_dicts)
-        annotation_df.to_csv(self.output_path, index=False, sep=self.sep)
+        if self.output_path is not None:
+            annotation_df.to_csv(self.output_path, index=False, sep=self.sep)
+        return annotation_df
