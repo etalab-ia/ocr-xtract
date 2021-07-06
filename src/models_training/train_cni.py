@@ -1,13 +1,16 @@
 import pandas as pd
 from pathlib import Path
 
+from sklearn.compose import TransformedTargetRegressor
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer, LabelEncoder
 
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
 from sklearn.metrics import f1_score, precision_score, recall_score, classification_report
 from sklearn.tree import DecisionTreeClassifier
+
+from sklearn.pipeline import Pipeline
 
 from src.salaire.doctr_utils import WindowTransformerList
 import numpy as np
@@ -20,13 +23,14 @@ columns.remove('label')
 X_train, y_train = data_train[columns], data_train["label"]
 X_test, y_test = data_test[columns], data_test["label"]
 
+
 lb = LabelBinarizer()
 y_train = lb.fit_transform(y_train)
 y_test = lb.transform(y_test)
 
 wt = WindowTransformerList()
-X_train = np.transpose(wt.fit_transform(X_train))
-X_test = np.transpose(wt.transform(X_test))
+X_train = wt.fit_transform(X_train)
+X_test = wt.transform(X_test)
 
 X_train_angle = X_train[:,:int(X_train.shape[1] / 2)] #take first half that corresponds to the angles
 X_test_angle = X_test[:,:int(X_train.shape[1] / 2)]
@@ -81,3 +85,5 @@ print(classification_report(y_test, y_pred))
 #
 # y_pred = lb.inverse_transform(y_pred)
 # np.savetxt("./data/CNI_recto/y_pred.csv", y_pred, delimiter=",", fmt='%s')
+
+
