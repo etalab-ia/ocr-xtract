@@ -22,5 +22,5 @@ if __name__ == '__main__':
     file = Path("./data/CNI_caro2.jpg")
     #get_list_of_files()
     f = post_file(file)
-    print(f['text'])
+    print(f['result'])
     #get_list_of_files()

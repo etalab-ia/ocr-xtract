@@ -9,6 +9,7 @@ from flask import Flask
 from flask import request, jsonify
 
 from src.document.CNI import CNI
+from src.image.image import RectoCNI
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -47,11 +48,9 @@ class OCRRectoCNI (Resource):
             self.logger.debug(f'**found {filename}')
             full_filename = UPLOAD_DIRECTORY / filename
             file.save(full_filename) #saves file in folder
-            cni = CNI(recto_path=full_filename)
+            cni = RectoCNI(full_filename)
             cni.align_images()
-            cni.clean_images()
-            cni.extract_ocr()
-            results = cni.export_ocr()
+            results = cni.extract_information()
             # files are removed after use
             os.remove(full_filename)
             data["result"] = results
