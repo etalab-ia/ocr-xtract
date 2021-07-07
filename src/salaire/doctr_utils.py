@@ -73,7 +73,6 @@ class WindowTransformerList(DictVectorizer):
         self.vectorizer = CountVectorizer(strip_accents='ascii', min_df=10, stop_words=stop_words)
         self.vectorizer.fit(self.list_words)
         self.vocab = self.vectorizer.get_feature_names()
-        self.vocab = ['nom','prenom']
         return self
 
     def transform(self, X: List[Document]):
