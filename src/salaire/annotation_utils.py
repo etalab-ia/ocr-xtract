@@ -65,7 +65,7 @@ class AnnotationDatasetCreator:
                         "word": word.value,
                         "min_x": word.geometry[0][0],
                         "min_y": word.geometry[0][1],
-                        "max_x": word.geometry[1][1],
+                        "max_x": word.geometry[0][1],
                         "max_y": word.geometry[1][1],
                         "page_id": page_id
                     }
