@@ -270,8 +270,8 @@ class VersoCNI(Image):
 
 
 if __name__ == "__main__":
-    image = RectoCNI(r'data\1acfa467-7687-455a-a780-7394d3b09d14.jpg')
     image = RectoCNI('data\CNI_caro2.jpg')
+    image = RectoCNI(r'data\CNI_4b0abc07-168d-42da-a2c7-c7e1c5ba159a.jpg')
     # best_score = image.tune_preprocessing()
     # image.clean(debug=True)
     # image.extract_ocr()

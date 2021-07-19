@@ -64,13 +64,13 @@ class WindowTransformerList(DictVectorizer):
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return np.transpose(self.array)
 
-    def fit(self, doctr_documents: pd.DataFrame, **kwargs):
+    def fit(self, doctr_documents: pd.DataFrame, min_df=50, **kwargs):
         self.list_words = [str(doc) for doc in doctr_documents['word'].to_list()]
         stop_words = get_stop_words('french')
         stop_words.append('nan')
         for word in ['nom','nommé','nommée','nommés']:
             stop_words.remove(word)
-        self.vectorizer = CountVectorizer(strip_accents='ascii', min_df=10, stop_words=stop_words)
+        self.vectorizer = CountVectorizer(strip_accents='ascii', min_df=min_df, stop_words=stop_words)
         self.vectorizer.fit(self.list_words)
         self.vocab = self.vectorizer.get_feature_names()
         return self
