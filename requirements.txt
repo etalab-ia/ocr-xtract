@@ -6,10 +6,15 @@ matplotlib
 olefile
 opencv-python
 pdf2image
+Pillow>=8.0.0
 pip-chill
 pytesseract
+python-doctr
 scikit-optimize
 sip
+stop-words==2018.7.23
 streamlit
+tensorflow>=2.4.0
+tensorflow-addons>=0.13.0
 tqdm
 wincertstore
