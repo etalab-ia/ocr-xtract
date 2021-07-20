@@ -28,9 +28,18 @@ def main():
         col2.header("Aligned")
         col2.image(image.aligned_image)
         response = image.extract_information()
-        nom = str(response['nom']['field'])
-        prenom = str(response['prenom']['field'])
-        date = str(response['date_naissance']['field'])
+        try:
+            nom = str(response['nom']['field'])
+        except:
+            nom = 'champ non détecté'
+        try:
+            prenom = str(response['prenom']['field'])
+        except:
+            prenom = 'champ non détecté'
+        try:
+            date = str(response['date_naissance']['field'])
+        except:
+            date = 'champ non détecté'
         col2.header("Extracted Information")
         col2.markdown(f'**Nom:** {nom}')
         col2.markdown(f'**Prénom:** {prenom}')
