@@ -62,7 +62,7 @@ class Image():
 
     def align_images(self, debug=False):
         if type(self.original_image) is not None:
-            print('Aligning image with the reference now ...')
+            print(f'Aligning image with the reference now ...{self.reference_image}')
             # convert both the input image and template to grayscale
             imageGray = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
             templateGray = cv2.cvtColor(self.reference_image, cv2.COLOR_BGR2GRAY)
@@ -165,6 +165,7 @@ class Image():
         doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))])
         dataset_creator = AnnotationDatasetCreator()
         X = dataset_creator.transform(doc)
+        print(X)
         shutil.rmtree(temp_folder)
         y = self.classifier.predict(X)
         y = self.label_binarizer.inverse_transform(y)
@@ -239,7 +240,7 @@ class Image():
 
 
 class RectoCNI(Image):
-    def __init__(self, image_path=None, reference_path='data/CNI_robin.jpg'):
+    def __init__(self, image_path=None, reference_path='data_xp/CNI_robin.jpg'):
         super().__init__(image_path, reference_path)
         self.zones = {
             'nom': {"value": "Nom :", "title": (448, 212, 524, 242), "field": (525, 210, 800, 270)},

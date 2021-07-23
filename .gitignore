@@ -135,6 +135,7 @@ dmypy.json
 .pytype/
 .idea/
 data/
+data_xp/
 model/
 *annot*
 
