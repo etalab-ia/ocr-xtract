@@ -62,7 +62,7 @@ class Image():
 
     def align_images(self, debug=False):
         if type(self.original_image) is not None:
-            print(f'Aligning image with the reference now ...{self.reference_image}')
+            print(f'Aligning image with the reference now ...{self.reference_path}')
             # convert both the input image and template to grayscale
             imageGray = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
             templateGray = cv2.cvtColor(self.reference_image, cv2.COLOR_BGR2GRAY)

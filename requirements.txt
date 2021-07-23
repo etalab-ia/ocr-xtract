@@ -4,6 +4,7 @@ gunicorn==20.1.0
 imutils==0.5.4
 olefile==0.46
 pdf2image==1.16.0
+Pillow>=8.0.0
 pip-chill==1.0.1
 pytesseract==0.3.7
 python-doctr==0.3.0
@@ -11,6 +12,17 @@ scikit-optimize==0.8.1
 sip==6.1.1
 stop-words==2018.7.23
 streamlit==0.83.0
-tensorflow==2.5.0
-tensorflow-addons==0.13.0
+tensorflow>=2.4.0
+tensorflow-addons>=0.13.0
 wincertstore==0.2
+numpy>=1.16.0
+scipy>=1.4.0
+opencv-python>=3.4.5.20
+PyMuPDF>=1.16.0,<1.18.11
+pyclipper>=1.2.0
+shapely>=1.6.0
+matplotlib>=3.1.0
+mplcursors>=0.3
+weasyprint>=52.2
+unidecode>=1.0.0
+tqdm>=4.30.0
