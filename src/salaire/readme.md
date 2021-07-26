@@ -1,4 +1,6 @@
-# How to create preannotated file in the Label Studio Format with Doctr bounding boxes
+# Preannotation with Doctr / Annotation with Label Studio 
+
+## How to create preannotated file in the Label Studio Format with Doctr bounding boxes
 
 
 
@@ -11,3 +13,15 @@
 where : 
 img_folder_path : forlder where your images are in jpg, png, jpeg format
 output_path: path/name_preannotation.json
+
+
+## How to convert the label studio annotated file into csv file 
+
+- export label studio annotation using the Label Studio json format 
+
+`df = LabelStudioConvertor(Path("export.json"), Path("annotated_data.csv")).transform()`
+
+where : 
+- export.json : path to the exported label studio json file
+- annotated_data.csv : path where you want to save the csv file 
+
