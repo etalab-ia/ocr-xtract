@@ -1,6 +1,6 @@
 from src.document.CNI import CNI
 
-filename = 'data/CNI_caro3.jpg'
+filename = 'tutorials/model_CNI.png'
 cni = CNI(recto_path=filename)
 cni.align_images()
 cni.clean_images()
