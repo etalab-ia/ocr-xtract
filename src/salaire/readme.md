@@ -2,7 +2,7 @@
 
 
 
-
+- `from doctr_utils import DoctrTransformer, AnnotationJsonCreator`
 - `list_img_path = [Path(x) for x in os.listdir(img_folder_path)]`
 - `doctr_transformer = DoctrTransformer()`
 - `list_doctr_docs = doctr_transformer._get_doctr_docs(list_img_path)`
