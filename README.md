@@ -68,7 +68,7 @@ python -m streamlit.cli run front/app_local.py
 - [R. Reynaud](https://github.com/rob192)
 - [G. Santarsieri](https://github.com/giuliasantarsieri)
 - [P. Soriano](https://github.com/psorianom)
-- [K. Montalibet](https://github.com/orgs/etalab-ia/people/KimMontalibet)
+- [K. Montalibet](https://github.com/KimMontalibet)
 
 ## How to contribute to this project
 
