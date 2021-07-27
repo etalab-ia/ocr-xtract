@@ -240,7 +240,7 @@ class Image():
 
 
 class RectoCNI(Image):
-    def __init__(self, image_path=None, reference_path='data_xp/CNI_robin.jpg'):
+    def __init__(self, image_path=None, reference_path='tutorials/model_CNI.png'):
         super().__init__(image_path, reference_path)
         self.zones = {
             'nom': {"value": "Nom :", "title": (448, 212, 524, 242), "field": (525, 210, 800, 270)},
