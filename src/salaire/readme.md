@@ -6,16 +6,14 @@ Exemple for CNI
 1. Prepare the data for annotation
 The CNI are easier to detect once they have been aligned to the reference CNI. First align and save your CNI with the script `align_cni_in_folder.py`
 
-- `from annotation_utils import DoctrTransformer, AnnotationJsonCreator`
-- `list_img_path = [Path(x) for x in os.listdir(img_folder_path)]`
-- `doctr_transformer = DoctrTransformer()`
-- `list_doctr_docs = doctr_transformer._get_doctr_docs(list_img_path)`
-- `annotations = AnnotationJsonCreator(list_img_path, output_path).transform(list_doctr_docs)`
+2. Prepare the annotated data with script_prepare_CNI_annotation.py
 
-where : 
-img_folder_path : forlder where your images are in jpg, png, jpeg format
-output_path: path/name_preannotation.json
+3. Run docker 
+```
+docker run -it -p 8080:8080 -v `pwd`/data/annotation:/label-studio/data heartexlabs/label-studio:latest
+```
 
+4. 
 
 ## How to convert the label studio annotated file into csv file 
 
