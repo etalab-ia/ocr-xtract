@@ -2,7 +2,9 @@
 
 ## How to create preannotated file in the Label Studio Format with Doctr bounding boxes
 
-
+Exemple for CNI
+1. Prepare the data for annotation
+The CNI are easier to detect once they have been aligned to the reference CNI. First align and save your CNI with the script `align_cni_in_folder.py`
 
 - `from annotation_utils import DoctrTransformer, AnnotationJsonCreator`
 - `list_img_path = [Path(x) for x in os.listdir(img_folder_path)]`
