@@ -26,27 +26,28 @@ For now, only a POC is avaible for extracting information for French DNI
 * Fork this repo 
 * Install requirements : `pip install -r requirements.txt`
 
+Since we use [doctr](https://mindee.github.io/doctr/), you will need extra dependencies if you are not running Linux.
+For MacOS users, you can install them as follows:
+```shell
+brew install cairo pango gdk-pixbuf libffi
+```
+
+For Windows users, those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
+
+
 ## How to extract information 
 ### CNI
-Place a reference CNI in `/data` and point to it when creating a `CNI` class :
+Using the reference CNI in `/tutorials/model_CNI.png` and point to it when creating a `RectoCNI` class :
 ```Python
-from src.document.CNI import CNI
-cni = CNI(recto_path=filename)
-cni.align_images()
-cni.clean_images()
-cni.extract_ocr()
-results = cni.export_ocr()
+from src.image.image import RectoCNI
+image = RectoCNI('data\CNI_caro2.jpg', reference_path='data/reference.png')
+image.extract_information()
 ```
 
 ### Using app (dev)
-Launch API using 
+Launch APP using
 ```
-python api/app.py
-```
-
-Launch FRONT using
-```
-streamlit run front/app.py
+python -m streamlit.cli run front/app_local.py
 ```
 
 ## Contributing Lab IA Members

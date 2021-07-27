@@ -11,11 +11,10 @@ Runs a baseline info extraction system. The procedure is as follows:
 
 from pathlib import Path
 
-
 from src.salaire.annotation_utils import DoctrTransformer, AnnotationDatasetCreator
 
-IMG_FOLDER_PATH = Path("./data/CNI_recto_aligned/test")
-TRAINING_DATA_PATH = Path("./data/CNI_recto_aligned/cni_annotation_recto_test.csv")
+IMG_FOLDER_PATH = Path("./data/salary/test")
+TRAINING_DATA_PATH = Path("./data/salary/cni_annotation_recto_test.csv")
 
 
 def main():
