@@ -17,7 +17,7 @@ tensorflow-addons>=0.13.0
 wincertstore==0.2
 numpy>=1.16.0
 scipy>=1.4.0
-opencv-python>=3.4.5.20
+opencv-python==4.5.2.54
 PyMuPDF>=1.16.0,<1.18.11
 pyclipper>=1.2.0
 shapely>=1.6.0
