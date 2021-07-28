@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional, List
 
 import pandas as pd
+import json
 from doctr.models import ocr_predictor
 from doctr.documents import DocumentFile, Document
 
@@ -94,9 +95,8 @@ class AnnotationJsonCreator:
     def transform(self, doctr_documents: List[Document]):
         annotations = []
         for doc_id, doc in enumerate(doctr_documents):
-            image_id = doc_id.split("/")[-1]
             page = doc.pages[0] # On ne traite que des png/jpg donc que des docs à une page
-            dict_image = {"data": {"image" : "/data/upload/{}".format(self.raw_documents[image_id])},
+            dict_image = {"data": {"image" : "/data/upload/{}".format(str(self.raw_documents[doc_id]).split("/")[-1])},
                           "predictions": [{'result': [], 'score': None}]} # result: list de dict pour chaque BBox
 
             list_words_in_page = get_list_words_in_page(page)
@@ -176,5 +176,4 @@ class LabelStudioConvertor:
             df_annotations.to_csv(self.output_path, index=False, sep=self.sep)
 
         return df_annotations
-
 
