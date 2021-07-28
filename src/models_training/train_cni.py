@@ -16,8 +16,8 @@ from src.salaire.doctr_utils import WindowTransformerList
 import numpy as np
 
 
-data_train = pd.read_csv("./data/CNI_recto_aligned/cni_annotation_recto_train.csv", sep=';')
-data_test = pd.read_csv("./data/CNI_recto_aligned/cni_annotation_recto_test.csv", sep=';')
+data_train = pd.read_csv("data/CNI_recto_aligned_linux/annotation_train.csv", sep=';')
+data_test = pd.read_csv("data/CNI_recto_aligned_linux/annotation_test.csv", sep=';')
 columns = data_train.columns.to_list()
 columns.remove('label')
 X_train, y_train = data_train[columns], data_train["label"]

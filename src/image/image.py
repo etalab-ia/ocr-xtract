@@ -67,6 +67,12 @@ class Image():
             imageGray = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
             templateGray = cv2.cvtColor(self.reference_image, cv2.COLOR_BGR2GRAY)
 
+            # rescale template so the original quality of the image is not lost
+            ho, wo = imageGray.shape
+            ht, wt = templateGray.shape
+            scaling = min(ho/ht, wo/wt)
+            templateGray = cv2.resize(templateGray,None,fx=scaling, fy=scaling, interpolation = cv2.INTER_LINEAR)
+
             # Initiate SIFT detector
             sift = cv2.SIFT_create()
             # find the keypoints and descriptors with SIFT
@@ -81,18 +87,18 @@ class Image():
             # store all the good matches as per Lowe's ratio test.
             good = []
             for m, n in matches:
-                if m.distance < 0.80 * n.distance:
+                if m.distance < 0.7 * n.distance:
                     good.append(m)
 
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
             M, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
             matchesMask = mask.ravel().tolist()
-            h, w, d = self.reference_image.shape
-            pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
-            dst = cv2.perspectiveTransform(pts, M)
-            # im2 = cv2.polylines(image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
-            self.aligned_image = cv2.warpPerspective(self.original_image, M, (w, h))
+            h, w = templateGray.shape
+            # pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
+            # dst = cv2.perspectiveTransform(pts, M)
+            # im2 = cv2.polylines(self.original_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+            self.aligned_image = cv2.warpPerspective(self.original_image, M, (w,h))
 
             if debug:
                 draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
