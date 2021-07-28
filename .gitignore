@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# macOS file
+.DS_Store
+.bash_profile
+.profile
+.zshrc
+
 # Distribution / packaging
 .Python
 poppler/

@@ -145,6 +145,7 @@ class LabelStudioConvertor:
             df_temp = pd.json_normalize(row["annotations"])
             df_temp_col = [x for x in df_temp.columns if "result" not in x]
             for index2, row2 in df_temp.iterrows():
+
                 df2temp = pd.json_normalize(row2["result"])
                 df_annotations = pd.concat([df_annotations, df2temp])
                 for col in df_col:
