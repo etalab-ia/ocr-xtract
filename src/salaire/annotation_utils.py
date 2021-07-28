@@ -1,6 +1,7 @@
 from collections import Counter
 from pathlib import Path
 from typing import Optional, List
+import json
 
 import pandas as pd
 from doctr.models import ocr_predictor
@@ -94,9 +95,9 @@ class AnnotationJsonCreator:
     def transform(self, doctr_documents: List[Document]):
         annotations = []
         for doc_id, doc in enumerate(doctr_documents):
-            image_id = doc_id.split("/")[-1]
+            image_path = self.raw_documents[doc_id].name
             page = doc.pages[0] # On ne traite que des png/jpg donc que des docs à une page
-            dict_image = {"data": {"image" : "/data/upload/{}".format(self.raw_documents[image_id])},
+            dict_image = {"data": {"image" : f"/data/local-files/?d={image_path}"},
                           "predictions": [{'result': [], 'score': None}]} # result: list de dict pour chaque BBox
 
             list_words_in_page = get_list_words_in_page(page)
@@ -144,7 +145,6 @@ class LabelStudioConvertor:
             df_temp = pd.json_normalize(row["annotations"])
             df_temp_col = [x for x in df_temp.columns if "result" not in x]
             for index2, row2 in df_temp.iterrows():
-
                 df2temp = pd.json_normalize(row2["result"])
                 df_annotations = pd.concat([df_annotations, df2temp])
                 for col in df_col:
@@ -153,10 +153,10 @@ class LabelStudioConvertor:
                     df_annotations[col] = df_temp._get_value(index2, col)
 
         df_annotations["label"] = df_annotations["value.rectanglelabels"].map(
-            lambda x: x[0] if pd.isna(x) == False else x)
+            lambda x: x[0] if not pd.isna(x) else 'O')
 
         # rename col names
-        dict_rename = {'value.x': 'min_x', 'value.y': 'min_y', 'value.rectanglelabels': 'label'}
+        dict_rename = {'value.x': 'min_x', 'value.y': 'min_y'}
         df_annotations.rename(columns=dict_rename, inplace=True)
 
         # clean columns
