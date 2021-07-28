@@ -125,6 +125,7 @@ class AnnotationJsonCreator:
 
         return annotations
 
+
 class LabelStudioConvertor:
     """class for converting label studio json files into dataframe"""
 
@@ -146,17 +147,17 @@ class LabelStudioConvertor:
             for index2, row2 in df_temp.iterrows():
 
                 df2temp = pd.json_normalize(row2["result"])
-                df_annotations = pd.concat([df_annotations, df2temp])
                 for col in df_col:
-                    df_annotations[col] = df._get_value(index, col)
+                    df2temp[col] = df._get_value(index, col)
                 for col in df_temp_col:
-                    df_annotations[col] = df_temp._get_value(index2, col)
+                    df2temp[col] = df_temp._get_value(index2, col)
+                df_annotations = pd.concat([df_annotations, df2temp])
 
         df_annotations["label"] = df_annotations["value.rectanglelabels"].map(
             lambda x: x[0] if pd.isna(x) == False else x)
 
         # rename col names
-        dict_rename = {'value.x': 'min_x', 'value.y': 'min_y', 'value.rectanglelabels': 'label'}
+        dict_rename = {'value.x': 'min_x', 'value.y': 'min_y'}
         df_annotations.rename(columns=dict_rename, inplace=True)
 
         # clean columns
@@ -169,7 +170,8 @@ class LabelStudioConvertor:
         # keep only minimal columns
         if all_columns == False:
             minimal_col_list = ['word', 'min_x', 'min_y', 'max_x', 'max_y', 'page_id', 'document_name', 'label',
-                                "completed_by.email"]
+                                "completed_by.email",
+                                'original_width', 'original_height']
             df_annotations = df_annotations[minimal_col_list]
 
         if self.output_path is not None:
