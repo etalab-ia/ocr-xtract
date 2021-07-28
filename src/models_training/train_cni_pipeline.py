@@ -16,8 +16,8 @@ from src.salaire.doctr_utils import WindowTransformerList
 import numpy as np
 
 
-data_train = pd.read_csv("./data/CNI_recto_aligned/cni_annotation_recto_train.csv", sep=';')
-data_test = pd.read_csv("./data/CNI_recto_aligned/cni_annotation_recto_test.csv", sep=';')
+data_train = pd.read_csv("./data/CNI_recto_aligned_linux/annotation_train.csv", sep='\t')
+data_test = pd.read_csv("./data/CNI_recto_aligned_linux/annotation_test.csv", sep='\t')
 columns = data_train.columns.to_list()
 columns.remove('label')
 X_train, y_train = data_train[columns], data_train["label"]
@@ -38,9 +38,9 @@ y_pred = pipe.predict(X_test)
 print(classification_report(y_test, y_pred))
 
 from pickle import dump
-with open('./model/CNI_model', 'wb') as f1:
+with open('./model/CNI_model_linux', 'wb') as f1:
     dump(pipe, f1)
-with open('./model/CNI_label', 'wb') as f2:
+with open('./model/CNI_label_linux', 'wb') as f2:
     dump(lb, f2)
 
 
