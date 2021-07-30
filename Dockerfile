@@ -3,7 +3,7 @@ FROM tensorflow/tensorflow:latest-gpu
 COPY requirements.txt requirements.txt
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends ffmpeg libsm6 libxext6 -y \
+    && apt-get install --no-install-recommends ffmpeg libsm6 libxext6 poppler-utils -y \
     && pip install --upgrade pip setuptools wheel \
     && pip install -r requirements.txt \
     && pip cache purge \

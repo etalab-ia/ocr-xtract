@@ -14,19 +14,19 @@ import numpy as np
 
 def main():
     st.title('CNI-Xtractor')
-    uploaded_file = st.file_uploader('Upload your file', type=['jpg', 'jpeg', 'png'])
+    uploaded_file = st.file_uploader('Upload your file', type=['jpg', 'jpeg', 'png','pdf'])
     if uploaded_file:
         temp_folder = mkdtemp()
-        with open(os.path.join(os.path.join(temp_folder, 'temp.jpg')), 'wb') as f:
+        with open(os.path.join(os.path.join(temp_folder, uploaded_file.name)), 'wb') as f:
             f.write(uploaded_file.getvalue())
-        image = RectoCNI(os.path.join(temp_folder, 'temp.jpg'))
+        image = RectoCNI(os.path.join(temp_folder, uploaded_file.name))
         shutil.rmtree(temp_folder)
         col1, col2 = st.beta_columns(2)
         col1.header("Original")
-        col1.image(image.original_image)
+        col1.image(image.original_image, channels='BGR')
         image.align_images()
         col2.header("Aligned")
-        col2.image(image.aligned_image)
+        col2.image(image.aligned_image, channels='BGR')
         response = image.extract_information()
         try:
             nom = str(response['nom']['field'])
