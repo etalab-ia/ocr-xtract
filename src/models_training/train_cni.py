@@ -12,17 +12,20 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline
 
-from src.salaire.doctr_utils import WindowTransformerList
+from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter
 import numpy as np
 
 
-data_train = pd.read_csv("data/CNI_recto_aligned_linux/annotation_train.csv", sep=';')
-data_test = pd.read_csv("data/CNI_recto_aligned_linux/annotation_test.csv", sep=';')
+data_train = pd.read_csv("data/CNI_recto_aligned_linux/annotation_train.csv", sep='\t')
+data_test = pd.read_csv("data/CNI_recto_aligned_linux/annotation_test.csv", sep='\t')
 columns = data_train.columns.to_list()
 columns.remove('label')
 X_train, y_train = data_train[columns], data_train["label"]
 X_test, y_test = data_test[columns], data_test["label"]
 
+bp = BoxPositionGetter()
+X_train_pos = bp.transform(X_train)
+X_test_pos = bp.transform(X_test)
 
 lb = LabelBinarizer()
 y_train = lb.fit_transform(y_train)
@@ -32,18 +35,18 @@ wt = WindowTransformerList()
 X_train = wt.fit_transform(X_train)
 X_test = wt.transform(X_test)
 
-X_train_angle = X_train[:,:int(X_train.shape[1] / 2)] #take first half that corresponds to the angles
-X_test_angle = X_test[:,:int(X_train.shape[1] / 2)]
+# X_train_angle = X_train[:,:int(X_train.shape[1] / 2)] #take first half that corresponds to the angles
+# X_test_angle = X_test[:,:int(X_train.shape[1] / 2)]
+#
+# X_train_distance = X_train[:,int(X_train.shape[1] / 2):] #take first half that corresponds to the angles
+# X_test_distance = X_test[:,int(X_train.shape[1] / 2):]
+#
+# X_train_is_left = np.where(np.logical_or(np.pi -0.1 < X_train_angle, X_train_angle < -np.pi + 0.1), 1.0,0.0)
+# X_test_is_left = np.where(np.logical_or(np.pi -0.1 < X_test_angle, X_test_angle < -np.pi + 0.1), 1.0,0.0)
 
-X_train_distance = X_train[:,int(X_train.shape[1] / 2):] #take first half that corresponds to the angles
-X_test_distance = X_test[:,int(X_train.shape[1] / 2):]
 
-X_train_is_left = np.where(np.logical_or(np.pi -0.1 < X_train_angle, X_train_angle < -np.pi + 0.1), 1.0,0.0)
-X_test_is_left = np.where(np.logical_or(np.pi -0.1 < X_test_angle, X_test_angle < -np.pi + 0.1), 1.0,0.0)
-
-
-# X_train = np.concatenate([X_train_distance, X_train_is_left], axis=1)
-# X_test = np.concatenate([X_test_distance, X_test_is_left], axis=1)
+X_train = np.concatenate([X_train, X_train_pos], axis=1)
+X_test = np.concatenate([X_test, X_test_pos], axis=1)
 
 
 

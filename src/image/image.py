@@ -174,7 +174,7 @@ class Image():
         print(X)
         shutil.rmtree(temp_folder)
         y = self.classifier.predict(X)
-        y = self.label_binarizer.inverse_transform(y)
+        # y = self.label_binarizer.inverse_transform(y)
         y_list = y.tolist()
         list_words = X.word.to_list()
         for w, l in zip(list_words,y_list):
@@ -262,8 +262,8 @@ class RectoCNI(Image):
         }
         with open("./model/CNI_model", 'rb') as data_model:
             self.classifier = pickle.load(data_model)
-        with open("./model/CNI_label", 'rb') as data_lb:
-            self.label_binarizer = pickle.load(data_lb)
+        # with open("./model/CNI_label", 'rb') as data_lb:
+        #     self.label_binarizer = pickle.load(data_lb)
 
 
 class VersoCNI(Image):

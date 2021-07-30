@@ -1,4 +1,4 @@
-FROM python:3.8.1-slim
+FROM tensorflow/tensorflow:latest-gpu
 
 COPY requirements.txt requirements.txt
 
