@@ -23,10 +23,10 @@ def main():
         shutil.rmtree(temp_folder)
         col1, col2 = st.beta_columns(2)
         col1.header("Original")
-        col1.image(image.original_image)
+        col1.image(image.original_image, channels='BGR')
         image.align_images()
         col2.header("Aligned")
-        col2.image(image.aligned_image)
+        col2.image(image.aligned_image, channels='BGR')
         response = image.extract_information()
         try:
             nom = str(response['nom']['field'])
