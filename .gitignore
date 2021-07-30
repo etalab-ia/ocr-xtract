@@ -144,4 +144,5 @@ data/
 data_xp/
 model/
 *annot*
+poppler*
 
