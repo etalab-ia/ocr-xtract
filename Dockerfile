@@ -13,4 +13,4 @@ RUN apt-get update \
 
 COPY . .
 WORKDIR .
-CMD [ "python", "-u" ,"-m", "streamlit.cli", "run", "front/app_local.py" ]
+CMD [ "streamlit", "run", "app_local.py" ]
