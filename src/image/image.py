@@ -19,6 +19,7 @@ from skopt import dump, gp_minimize
 from skopt.utils import use_named_args
 from skopt.plots import plot_objective
 
+from src.image.preprocessing import convert_pdf_to_image
 from src.image.remove_noise import ImageCleaning
 from src.image.utils_optimizer import LoggingCallback
 
@@ -50,7 +51,10 @@ class Image():
         self.label_binarizer = None
 
     def load_image(self, image_path):
-        return cv2.imread(str(image_path))
+        if image_path.suffix == '.pdf':
+            return np.array(convert_pdf_to_image(image_path)[0])[:, :, ::-1] #convert to numpy and BGR instead of RGB
+        else:
+            return cv2.imread(str(image_path))
 
     def save(self, image_path):
         if self.aligned_image is not None:
