@@ -175,6 +175,9 @@ class LabelStudioConvertor:
                                 'original_width', 'original_height']
             df_annotations = df_annotations[minimal_col_list]
 
+        for col in ['min_x','min_y','max_x','max_y']:
+            df_annotations[col] = df_annotations[col] / 100
+
         if self.output_path is not None:
             df_annotations.to_csv(self.output_path, index=False, sep=self.sep)
 

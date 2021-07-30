@@ -1,7 +1,9 @@
+import difflib
 from collections import Counter
 from pathlib import Path
 from pprint import pprint
 from typing import Optional, List, Dict
+import re
 
 import numpy as np
 from doctr.models import ocr_predictor
@@ -19,17 +21,36 @@ class PageExtended(Page):
 
 
 class WindowTransformerList(DictVectorizer):
-    def __init__(self, horizontal: int = 3, vertical: int = 3, page_id: Optional[int] = None, line_eps: float = 2):
+    def __init__(self, searched_words: List = None):
         super().__init__(sparse=False)
+        self.searched_words=searched_words
         self._list_words_in_page = []
 
+    def get_words_in_page(self, df):
+        if self.searched_words is None:
+            list_words = [str(doc) for doc in df['word'].to_list()]
+        else:
+            list_words = []
+            for doc in df['word'].to_list():
+                doc = str(doc)
+                close_matches = difflib.get_close_matches(doc, self.searched_words)
+                if len(close_matches) > 0:
+                    list_words.append(close_matches[0])
+                else:
+                    list_words.append(doc)
+        return list_words
+
+    def get_middle_position(self, df, i):
+        return (df.iloc[i]["min_x"] + df.iloc[i]["max_x"]) / 2, (df.iloc[i]["min_y"] + df.iloc[i]["max_y"]) / 2
+
     def _transform(self, doct_documents: pd.DataFrame, **kwargs):
+        print(f"vocab that will be used for transform {self.vocab}")
         list_array_angle = []
         list_array_distance = []
         for doc in doct_documents['document_name'].unique():
             for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
                 df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)]
-                list_plain_words_in_page = [str(doc) for doc in df['word'].to_list()]
+                list_plain_words_in_page = self.get_words_in_page(df)
                 list_token = self.vectorizer.inverse_transform(self.vectorizer.transform(list_plain_words_in_page))
                 for i, token in enumerate(list_token):
                     if len(token) > 0:
@@ -64,11 +85,12 @@ class WindowTransformerList(DictVectorizer):
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return np.transpose(self.array)
 
-    def fit(self, doctr_documents: pd.DataFrame, min_df=50, **kwargs):
-        self.list_words = [str(doc) for doc in doctr_documents['word'].to_list()]
+    def fit(self, doctr_documents: pd.DataFrame, min_df=0.2, **kwargs):
+        min_df = int(min_df * len(doctr_documents['document_name'].unique()))
+        self.list_words = self.get_words_in_page(doctr_documents)
         stop_words = get_stop_words('french')
         stop_words.append('nan')
-        for word in ['nom','nommé','nommée','nommés']:
+        for word in ['ne','le','nom','nommé','nommée','nommés']:
             stop_words.remove(word)
         self.vectorizer = CountVectorizer(strip_accents='ascii', min_df=min_df, stop_words=stop_words)
         self.vectorizer.fit(self.list_words)
@@ -119,6 +141,28 @@ class WindowTransformerList(DictVectorizer):
 
         return features
 
+
+class BoxPositionGetter(TransformerMixin, BaseEstimator):
+    def fit(self, X, y=None):
+        return self
+
+    def find_middle(self, X):
+        X["middle_x"] = (X['min_x'] + X["max_x"])/2
+        X["middle_y"] = (X['min_y'] + X["max_y"])/2
+        return X[["middle_x", "middle_y"]]
+
+    def transform(self, X):
+        return X.apply(self.find_middle, axis=1).to_numpy()
+
+class ContainsDigit(TransformerMixin, BaseEstimator):
+    def fit(self, X, y=None):
+        return self
+
+    def contains_digit(self, x):
+        return len(re.findall(r"\d", str(x))) > 0
+
+    def transform(self, X):
+        return np.stack([X['word'].apply(lambda x: self.contains_digit(x)).to_numpy().astype(int)], axis =1)
 
 def extract_words(doctr_result: dict):
     words_dict = []
