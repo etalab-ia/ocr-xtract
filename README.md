@@ -27,13 +27,24 @@ For now, only a POC is avaible for extracting information for French DNI
 * Install requirements : `pip install -r requirements.txt`
 
 Since we use [doctr](https://mindee.github.io/doctr/), you will need extra dependencies if you are not running Linux.
-For MacOS users, you can install them as follows:
+### For MacOS users
+You can install them as follows:
 ```shell
 brew install cairo pango gdk-pixbuf libffi
 ```
+###For Windows users
+Those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
 
-For Windows users, those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
+We also use `pdf2image`. For installing the requirements  are to install `poppler`
 
+### Windows
+Windows users will have to build or download poppler for Windows. I recommend [@oschwartz10612 version](https://github.com/oschwartz10612/poppler-windows/releases/) which is the most up-to-date. You will then have to add the `bin/` folder to [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) or use `poppler_path = r"C:\path\to\poppler-xx\bin" as an argument` in `convert_from_path`.
+
+### Mac
+Mac users will have to install [poppler for Mac](http://macappstore.org/poppler/).
+
+### Linux
+Most distros ship with `pdftoppm` and `pdftocairo`. If they are not installed, refer to your package manager to install `poppler-utils`
 
 ## How to extract information 
 ### CNI

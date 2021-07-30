@@ -11,7 +11,7 @@ def convert_pdf_to_image(pdf):
     :param pdf:
     :return:
     """
-    pages = convert_from_path('pdf_file', 500)
+    pages = convert_from_path(pdf, 500)
     return pages
 
 
