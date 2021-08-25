@@ -58,8 +58,49 @@ image.extract_information()
 ### Using app (dev)
 Launch APP using
 ```
-python -m streamlit.cli run front/app_local.py
+streamlit run app_local.py
 ```
+
+You can launch the app via the Dockerfile
+
+## How to perform the annotation
+### CNI 
+1. Prepare the data for annotation: 
+   Launch script `align_cni_in_folder.py`. This script will align the images. The CNI are easier to detect once they have been aligned to the reference CNI.
+2. Prepare the annotated data : 
+   Launch script `script_prepare_CNI_annotation.py`. This script will create a csv file with the OCR data extracted from image and to be annotated with Label Studio
+3. Place the images to be annotated in `/data/label_studio_files` 
+4. Launch the annotation platform. This command will mount your local folder data\label-studio inside label-studio so label-studio can use it. 
+   It will also mount the folder label_studio_files where you have put the images to be annotated inside label-studio
+```
+docker run -it -p 8080:8080 -v `pwd`/data/label-studio:/label-studio/data \
+--env LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true \ 
+--env LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files \ 
+-v `pwd`/data/label_studio_files:/label-studio/files \
+heartexlabs/label-studio:latest
+
+docker run -it -p 8080:8080 -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\data\label-studio:/label-studio/data --env LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true --env LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\data\label_studio_files:/label-studio/files heartexlabs/label-studio:latest
+```
+
+5. Create an annotation project :
+   - import the json file generated in step 2.
+   - select object detection with Bounding Boxes in Labeling Setup
+   - Input the label you want to have for the annotation.
+
+5. Once the annotation is complete, you can export the annotation in json
+6. Convert the annotation from json to csv with `script_get_csv_from_annotation_json.py`
+7. Use this file to train a new model with ``train_cni_pipeline.py``
+
+## How to convert the label studio annotated file into csv file 
+
+- export label studio annotation using the Label Studio json format 
+
+`df = LabelStudioConvertor(Path("export.json"), Path("annotated_data.csv")).transform()`
+
+where : 
+- export.json : path to the exported label studio json file
+- annotated_data.csv : path where you want to save the csv file 
+
 
 ## Contributing Lab IA Members
 * [R. Reynaud](https://github.com/rob192)
