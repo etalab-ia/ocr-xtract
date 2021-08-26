@@ -6,8 +6,8 @@ from pathlib import Path
 from src.image.image import RectoCNI
 import os
 
-folder = Path("./data/CNI_recto/train")
-save_folder = Path("./data/CNI_recto_aligned_linux/train")
+folder = Path("./data/batch_1_Kim/CNI_recto_train/")
+save_folder = Path("./data/batch_1_Kim/CNI_recto_train_aligned/")
 
 os.makedirs(save_folder, exist_ok=True)
 
@@ -17,8 +17,11 @@ list_files_output = os.listdir(save_folder)
 list_path_output = [os.path.join(folder, path) for path in list_files_output]
 
 for path, file in zip(list_path_to_treat, list_files):
-    if path[-3:] == 'jpg' and path not in list_path_output:
+    if path[-3:] in ['jpg','pdf','png','peg'] and path not in list_path_output:
+        print(f'Treating file {path}')
         image = RectoCNI(path)
         image.align_images()
         image.save(os.path.join(save_folder, file))
+    else:
+        print(f'Skipping file {path}')
 
