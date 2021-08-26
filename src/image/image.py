@@ -109,6 +109,11 @@ class Image():
                 if m.distance < 0.7 * n.distance:
                     good.append(m)
 
+            if len(good) < 4: #this is done to ensure cv2.findHomography has enough point to work with
+                for m, n in matches:
+                    if m.distance < 0.6 * n.distance:
+                        good.append(m)
+
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
             M, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
