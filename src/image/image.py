@@ -10,7 +10,9 @@ import pytesseract
 from pathlib import Path
 from collections import Counter
 
-import PIL as pil
+import PIL.Image as Image
+Image.MAX_IMAGE_PIXELS = None
+# used to bypass PIL.Image.DecompressionBombError that prevents from opening large files
 
 from doctr.documents import DocumentFile
 from joblib import load
@@ -52,11 +54,24 @@ class Image():
 
     def load_image(self, image_path):
         if image_path.suffix == '.pdf':
-            return np.array(convert_pdf_to_image(image_path)[0])[:, :, ::-1] #convert to numpy and BGR instead of RGB
+            img = np.array(convert_pdf_to_image(image_path)[0])[:, :, ::-1] #convert to numpy and BGR instead of RGB
         else:
-            return cv2.imread(str(image_path))
+            img = cv2.imread(str(image_path))
+
+        # reduce image size when it's too large:
+        max_size = 150000000
+        if img.size > max_size:
+            scaling = np.sqrt(max_size / img.size)
+            img = cv2.resize(img, (0,0), fx=scaling, fy=scaling, interpolation=cv2.INTER_NEAREST)
+
+        return img
+
 
     def save(self, image_path):
+        pre, ext = os.path.splitext(image_path)
+        if ext == '.pdf':
+            #if original image is a pdf, save as a png
+            image_path = pre + '.png'
         if self.aligned_image is not None:
             cv2.imwrite(image_path, self.aligned_image)
         elif self.cleaned_image is not None:
