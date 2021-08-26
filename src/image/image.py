@@ -109,20 +109,20 @@ class Image():
                 if m.distance < 0.7 * n.distance:
                     good.append(m)
 
-            if len(good) < 4: #this is done to ensure cv2.findHomography has enough point to work with
-                for m, n in matches:
-                    if m.distance < 0.6 * n.distance:
-                        good.append(m)
-
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-            M, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-            matchesMask = mask.ravel().tolist()
-            h, w = templateGray.shape
-            # pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
-            # dst = cv2.perspectiveTransform(pts, M)
-            # im2 = cv2.polylines(self.original_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
-            self.aligned_image = cv2.warpPerspective(self.original_image, M, (w,h))
+
+            try:
+                M, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+                matchesMask = mask.ravel().tolist()
+                h, w = templateGray.shape
+                # pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
+                # dst = cv2.perspectiveTransform(pts, M)
+                # im2 = cv2.polylines(self.original_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+                self.aligned_image = cv2.warpPerspective(self.original_image, M, (w,h))
+            except:
+                self.aligned_image = None
+                print('Image cannot be aligned')
 
             if debug:
                 draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
