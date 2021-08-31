@@ -186,6 +186,32 @@ class Image():
 
         return self.extracted_information
 
+    def extract_results (self, X):
+        """
+        get the results from labelisation
+        :param X: dataframe
+        :return:
+
+                extracted_information = {}
+        y_list = X.label.tolist()
+        list_words = X.word.to_list()
+        for w, l in zip(list_words,y_list):
+            if l != 'O':
+                if l not in extracted_information.keys():
+                    extracted_information[l] = {}
+                    extracted_information[l]['field'] = [w]
+                else:
+                    extracted_information[l]['field'].append(w)
+        """
+        extracted_information ={}
+        list_info = X['label'].unique()
+        for info in list_info:
+            # TODO : once we'll have line identification, we need to read by lines
+            list_words = X[X['label'] == info].sort_values(['min_x'])['word'].to_list()
+            extracted_information[info] = {}
+            extracted_information[info]['field'] = list_words
+        return extracted_information
+
     def extract_information(self, debug=False):
         if self.aligned_image is None:
             self.align_images(debug=debug)
@@ -195,19 +221,11 @@ class Image():
         doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))])
         dataset_creator = AnnotationDatasetCreator()
         X = dataset_creator.transform(doc)
-        print(X)
         shutil.rmtree(temp_folder)
-        y = self.classifier.predict(X)
+        X['label'] = self.classifier.predict(X)
+        print(X)
         # y = self.label_binarizer.inverse_transform(y)
-        y_list = y.tolist()
-        list_words = X.word.to_list()
-        for w, l in zip(list_words,y_list):
-            if l != 'O':
-                if l not in self.extracted_information.keys():
-                    self.extracted_information[l] = {}
-                    self.extracted_information[l]['field'] = [w]
-                else:
-                    self.extracted_information[l]['field'].append(w)
+        self.extracted_information = self.extract_results(X)
         return self.extracted_information
 
     def quality_ocr(self):
