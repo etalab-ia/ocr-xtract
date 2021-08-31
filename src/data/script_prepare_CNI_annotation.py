@@ -3,8 +3,8 @@ from pathlib import Path
 import os
 
 
-img_folder_path = "data/CNI_recto_aligned_linux/train"
-output_path = "data/CNI_recto_aligned_linux/cni_annotation_train_docker.json"
+img_folder_path = "data/batch_1_Robin/CNI_recto_test_aligned"
+output_path = "data/batch_1_Robin/cni_annotation_test_2.json"
 
 
 def main():

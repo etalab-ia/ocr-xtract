@@ -16,8 +16,8 @@ from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, Co
 import numpy as np
 
 
-data_train = pd.read_csv("./data/CNI_recto_aligned_linux/annotation_train.csv", sep='\t')
-data_test = pd.read_csv("./data/CNI_recto_aligned_linux/annotation_test.csv", sep='\t')
+data_train = pd.read_csv("./data/cni_recto_csv_for_training/train_annotated.csv", sep='\t')
+data_test = pd.read_csv("./data/cni_recto_csv_for_training/test_annotated.csv", sep='\t')
 columns = data_train.columns.to_list()
 columns.remove('label')
 X_train, y_train = data_train[columns], data_train["label"]
@@ -38,6 +38,8 @@ pipe = Pipeline([
 
 pipe.fit(X_train, y_train)
 y_pred = pipe.predict(X_test)
+X_test['label']=y_pred
+print(X_test)
 print(classification_report(y_test, y_pred))
 
 from pickle import dump
