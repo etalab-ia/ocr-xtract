@@ -83,6 +83,7 @@ docker run -it -p 8080:8080 -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\da
 ```
 
 5. Create an annotation project :
+   - name your project
    - import the json file generated in step 2.
    - select object detection with Bounding Boxes in Labeling Setup
    - Input the label you want to have for the annotation.
