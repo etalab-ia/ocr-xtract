@@ -164,6 +164,21 @@ class ContainsDigit(TransformerMixin, BaseEstimator):
     def transform(self, X):
         return np.stack([X['word'].apply(lambda x: self.contains_digit(x)).to_numpy().astype(int)], axis =1)
 
+class IsPrenom(TransformerMixin, BaseEstimator):
+    def __init__(self):
+        with open('src/salaire/prenoms_fr_1900_2020.txt', 'r') as f:
+            self.prenom_list = [line.strip().lower() for line in f.readlines()]
+
+    def fit(self, X, y=None):
+        return self
+
+    def is_prenom(self, x):
+        return str(x).lower() in self.prenom_list
+
+    def transform(self, X):
+        return np.stack([X['word'].apply(lambda x: self.is_prenom(x)).to_numpy().astype(int)], axis=1)
+
+
 def extract_words(doctr_result: dict):
     words_dict = []
     for page in doctr_result["pages"]:
