@@ -13,8 +13,8 @@ from pathlib import Path
 
 from src.salaire.annotation_utils import DoctrTransformer, AnnotationDatasetCreator
 
-IMG_FOLDER_PATH = Path("./data/CNI_recto_aligned_linux/train")
-TRAINING_DATA_PATH = Path("./data/CNI_recto_aligned_linux/cni_annotation_recto_train.csv")
+IMG_FOLDER_PATH = Path("./data/salary/train")
+TRAINING_DATA_PATH = Path("./data/salary/cni_annotation_recto_train.csv")
 
 
 def main():
