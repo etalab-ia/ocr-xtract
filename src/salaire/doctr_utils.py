@@ -15,6 +15,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 import pandas as pd
 from stop_words import get_stop_words
 
+import dateparser
+
 
 class PageExtended(Page):
     pass
@@ -177,6 +179,33 @@ class IsPrenom(TransformerMixin, BaseEstimator):
 
     def transform(self, X):
         return np.stack([X['word'].apply(lambda x: self.is_prenom(x)).to_numpy().astype(int)], axis=1)
+
+class IsNom (TransformerMixin, BaseEstimator):
+    def __init__(self):
+        with open('src/salaire/noms.txt', 'r') as f:
+            self.nom_list = [line.strip().lower() for line in f.readlines()]
+
+    def fit(self, X, y=None):
+        return self
+
+    def is_nom(self, x):
+        return str(x).lower() in self.nom_list
+
+    def transform(self, X):
+        return np.stack([X['word'].apply(lambda x: self.is_nom(x)).to_numpy().astype(int)], axis=1)
+
+class IsDate (TransformerMixin, BaseEstimator):
+    def fit(self, X, y=None):
+        return self
+
+    def is_date(self, x):
+        if len(re.findall(r"\d", str(x))) > 0: #check  only if there are digits otherwise it takes too long
+            return dateparser.parse(str(x).lower()) is not None
+        else:
+            return False
+
+    def transform(self, X):
+        return np.stack([X['word'].apply(lambda x: self.is_date(x)).to_numpy().astype(int)], axis=1)
 
 
 def extract_words(doctr_result: dict):
