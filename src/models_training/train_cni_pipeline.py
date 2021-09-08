@@ -12,7 +12,8 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline, FeatureUnion
 
-from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, ContainsDigit, IsNom, IsPrenom, IsDate
+from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, ContainsDigit, IsNom, IsPrenom, IsDate, \
+    BagOfWordInLine
 import numpy as np
 
 
@@ -26,6 +27,7 @@ X_test, y_test = data_test[columns], data_test["label"]
 
 pipe = Pipeline([
     ('feature_union', FeatureUnion([('window_transformer', WindowTransformerList(searched_words=['Nom:','Prénom(s):','Né(e)'])),
+                                    ('bag_of_words', BagOfWordInLine(searched_words=['Nom:', 'Prénom(s):', 'Né(e)'])),
                                     ("position", BoxPositionGetter()),
                                     ('is_digit', ContainsDigit()),
                                     ('is_nom', IsNom()),
@@ -46,7 +48,7 @@ print(X_test)
 print(classification_report(y_test, y_pred))
 
 from pickle import dump
-with open('./model/model_test', 'wb') as f1:
+with open('./model/model_test_h', 'wb') as f1:
     dump(pipe, f1)
 # with open('./model/CNI_label', 'wb') as f2:
 #     dump(lb, f2)
