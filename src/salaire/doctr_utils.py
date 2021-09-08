@@ -15,14 +15,15 @@ from sklearn.feature_extraction.text import CountVectorizer
 import pandas as pd
 from stop_words import get_stop_words
 
+from jenkspy import JenksNaturalBreaks
+
 import dateparser
 
 
 class PageExtended(Page):
     pass
 
-
-class WindowTransformerList(DictVectorizer):
+class XtractVectorizer(DictVectorizer):
     def __init__(self, searched_words: List = None):
         super().__init__(sparse=False)
         self.searched_words=searched_words
@@ -41,6 +42,28 @@ class WindowTransformerList(DictVectorizer):
                 else:
                     list_words.append(doc)
         return list_words
+
+    def fit(self, doctr_documents: pd.DataFrame, min_df=0.2, **kwargs):
+        min_df = int(min_df * len(doctr_documents['document_name'].unique()))
+        self.list_words = self.get_words_in_page(doctr_documents)
+        stop_words = get_stop_words('french')
+        stop_words.append('nan')
+        for word in ['ne','le','nom','nommé','nommée','nommés']:
+            try:
+                stop_words.remove(word)
+            except:
+                print(f'{word} not in stop words already')
+        self.vectorizer = CountVectorizer(strip_accents='ascii', min_df=min_df, stop_words=stop_words)
+        self.vectorizer.fit(self.list_words)
+        self.vocab = self.vectorizer.get_feature_names()
+        return self
+
+
+    def fit_transform(self, X: pd.DataFrame,y = None, **kwargs):
+        self.fit(X)
+        return self._transform(X)
+
+class WindowTransformerList(XtractVectorizer):
 
     def get_middle_position(self, df, i):
         return (df.iloc[i]["min_x"] + df.iloc[i]["max_x"]) / 2, (df.iloc[i]["min_y"] + df.iloc[i]["max_y"]) / 2
@@ -87,17 +110,6 @@ class WindowTransformerList(DictVectorizer):
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return np.transpose(self.array)
 
-    def fit(self, doctr_documents: pd.DataFrame, min_df=0.2, **kwargs):
-        min_df = int(min_df * len(doctr_documents['document_name'].unique()))
-        self.list_words = self.get_words_in_page(doctr_documents)
-        stop_words = get_stop_words('french')
-        stop_words.append('nan')
-        for word in ['ne','le','nom','nommé','nommée','nommés']:
-            stop_words.remove(word)
-        self.vectorizer = CountVectorizer(strip_accents='ascii', min_df=min_df, stop_words=stop_words)
-        self.vectorizer.fit(self.list_words)
-        self.vocab = self.vectorizer.get_feature_names()
-        return self
 
     def transform(self, X: List[Document]):
         return self._transform(X)
@@ -124,9 +136,6 @@ class WindowTransformerList(DictVectorizer):
                 list_doctr_docs.append(res_doctr)
         return list_doctr_docs
 
-    def fit_transform(self, X: List[Document],y = None, **kwargs):
-        self.fit(X)
-        return self._transform(X)
 
     @staticmethod
     def _get_neighbors_features(word, neighbors: Dict[str, List[Word]]):
@@ -168,7 +177,7 @@ class ContainsDigit(TransformerMixin, BaseEstimator):
 
 class IsPrenom(TransformerMixin, BaseEstimator):
     def __init__(self):
-        with open('src/salaire/prenoms_fr_1900_2020.txt', 'r') as f:
+        with open('src/salaire/prenoms_fr_1900_2020.txt', 'r', encoding='UTf_8') as f:
             self.prenom_list = [line.strip().lower() for line in f.readlines()]
 
     def fit(self, X, y=None):
@@ -206,6 +215,44 @@ class IsDate (TransformerMixin, BaseEstimator):
 
     def transform(self, X):
         return np.stack([X['word'].apply(lambda x: self.is_date(x)).to_numpy().astype(int)], axis=1)
+
+class BagOfWordInLine(XtractVectorizer):
+    def _transform(self, doct_documents: pd.DataFrame, **kwargs):
+        print(f"vocab that will be used for transform {self.vocab}")
+
+        self.array_lines = np.zeros(doct_documents.shape[0])
+        self.array_bows = np.zeros((doct_documents.shape[0],len(self.vectorizer.get_feature_names())))
+        i = 0
+        for doc in doct_documents['document_name'].unique():
+            for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
+                df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)].copy()
+
+                y = df['max_y']
+                jnb = JenksNaturalBreaks()
+                jnb.fit(y)
+
+                predicted_lines = jnb.predict(y)
+                df['line'] = predicted_lines
+
+                for line in predicted_lines:
+                    words = [str(w) for w in df[df['line'] == line]['word'].to_list()]
+                    bag = ' '.join(words)
+                    self.array_lines[i] = line
+                    self.array_bows[i] = self.vectorizer.transform([bag]).toarray()
+                    i += 1
+
+        self.array = np.vstack((self.array_lines.T, self.array_bows.T))
+        self._feature_names = ['lines'] +[f'bows_{f}' for f in self.vectorizer.get_feature_names()]
+
+        # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
+        return np.transpose(self.array)
+
+    def transform(self, X: pd.DataFrame):
+        return self._transform(X)
+
+
+
+
 
 
 def extract_words(doctr_result: dict):
