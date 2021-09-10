@@ -5,6 +5,10 @@ from pprint import pprint
 from typing import Optional, List, Dict
 import re
 
+from joblib import Parallel, delayed
+from tqdm import tqdm
+# from pandarallel import pandarallel
+
 import numpy as np
 from doctr.models import ocr_predictor
 from doctr.documents import DocumentFile, Page, Document, Word
@@ -24,9 +28,33 @@ class PageExtended(Page):
     pass
 
 class XtractVectorizer(DictVectorizer):
-    def __init__(self, searched_words: List = None):
+    """ This call is used for vectorizing text extracting from DocTr
+
+    Parameters
+    ----------
+    searched_words : List[str], default=None
+        Specify here if you are looking for some specific words in the document that could be considered as anchors
+    n_jobs : int, default=-1
+        Indicates the number of threads you want to use when a parallelized process is available
+    min_df : float in range [0.0, 1.0] or int, default=0.2
+        Used to be passed to CountVectorizer
+        When building the vocabulary ignore terms that have a document
+        frequency strictly lower than the given threshold. This value is also
+        called cut-off in the literature.
+        If float, the parameter represents a proportion of documents, integer
+        absolute counts.
+        This parameter is ignored if vocabulary is not None.
+
+    Attributes
+    ----------
+
+
+    """
+    def __init__(self, searched_words: List[str] = None, n_jobs: int = -1, min_df: float = 0.2):
         super().__init__(sparse=False)
-        self.searched_words=searched_words
+        self.searched_words = searched_words
+        self.n_jobs = n_jobs
+        self.min_df = min_df
         self._list_words_in_page = []
 
     def get_words_in_page(self, df):
@@ -43,8 +71,8 @@ class XtractVectorizer(DictVectorizer):
                     list_words.append(doc)
         return list_words
 
-    def fit(self, doctr_documents: pd.DataFrame, min_df=0.2, **kwargs):
-        min_df = int(min_df * len(doctr_documents['document_name'].unique()))
+    def fit(self, doctr_documents: pd.DataFrame, **kwargs):
+        min_df = int(self.min_df * len(doctr_documents['document_name'].unique()))
         self.list_words = self.get_words_in_page(doctr_documents)
         stop_words = get_stop_words('french')
         stop_words.append('nan')
@@ -68,47 +96,54 @@ class WindowTransformerList(XtractVectorizer):
     def get_middle_position(self, df, i):
         return (df.iloc[i]["min_x"] + df.iloc[i]["max_x"]) / 2, (df.iloc[i]["min_y"] + df.iloc[i]["max_y"]) / 2
 
+    def get_relative_positions(self, vocab_i, list_plain_words_in_page, df):
+        array_angles = np.zeros(len(list_plain_words_in_page))  # false value for angle
+        array_distances = np.ones(len(list_plain_words_in_page)) * 1  # max distance
+        if vocab_i in list_plain_words_in_page:
+            wi_list = [i for i, x in enumerate(list_plain_words_in_page) if x == vocab_i]
+            for wi in wi_list:
+                for j, word_j in enumerate(list_plain_words_in_page):
+                    x_i, y_i = df.iloc[wi]['min_x'], df.iloc[wi]['min_y']
+                    x_j, y_j = df.iloc[j]['min_x'], df.iloc[j]['min_y']
+                    distance = cosine((x_i, y_i), (x_j, y_j))
+                    if distance < array_distances[j]:  # in case there are several identical duplicate of vocab i, take the closest
+                        array_angles[j] = np.arctan2((y_j - y_i), (x_j - x_i))
+                        array_distances[j] = distance
+        return array_angles, array_distances
+
+
     def _transform(self, doct_documents: pd.DataFrame, **kwargs):
         print(f"vocab that will be used for transform {self.vocab}")
         list_array_angle = []
         list_array_distance = []
-        for doc in doct_documents['document_name'].unique():
-            for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
-                df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)]
-                list_plain_words_in_page = self.get_words_in_page(df)
-                list_token = self.vectorizer.inverse_transform(self.vectorizer.transform(list_plain_words_in_page))
-                for i, token in enumerate(list_token):
-                    if len(token) > 0:
-                        list_plain_words_in_page[i] = token[0]
-                self._list_words_in_page.extend(list_plain_words_in_page)
-                vocab = self.vocab
-                array_angles = np.zeros((len(vocab), len(list_plain_words_in_page)))  # false value for angle
-                array_distances = np.ones((len(vocab), len(list_plain_words_in_page))) * 1  # max distance
+        with Parallel(n_jobs=self.n_jobs) as parallel:
+            for doc in tqdm(doct_documents['document_name'].unique()):
+                for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
+                    df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)]
+                    list_plain_words_in_page = self.get_words_in_page(df)
+                    list_token = self.vectorizer.inverse_transform(self.vectorizer.transform(list_plain_words_in_page))
+                    for i, token in enumerate(list_token):
+                        if len(token) > 0:
+                            list_plain_words_in_page[i] = token[0]
+                    self._list_words_in_page.extend(list_plain_words_in_page)
+                    vocab = self.vocab
+                    self.array_angles = np.zeros((len(vocab), len(list_plain_words_in_page)))  # false value for angle
+                    self.array_distances = np.ones((len(vocab), len(list_plain_words_in_page))) * 1  # max distance
 
-                for i, vocab_i in enumerate(vocab):
-                    if vocab_i in list_plain_words_in_page:
-                        wi_list = [i for i, x in enumerate(list_plain_words_in_page) if x == vocab_i]
-                        for wi in wi_list:
-                            for j, word_j in enumerate(list_plain_words_in_page):
-                                x_i, y_i = df.iloc[wi]['min_x'], df.iloc[wi]['min_y']
-                                x_j, y_j = df.iloc[j]['min_x'], df.iloc[j]['min_y']
-                                distance = cosine((x_i, y_i), (x_j, y_j))
-                                if distance < array_distances[
-                                    i, j]:  # in case there are several identical duplicate of vocab i, take the closest
-                                    array_angles[i, j] = np.arctan2((y_j - y_i), (x_j - x_i))
-                                    array_distances[i, j] = distance
-                    else:
-                        print(f'--------------vocab------{vocab_i} not in page')
-
-                list_array_angle.append(array_angles)
-                list_array_distance.append(array_distances)
-        self.array_angle = np.hstack(list_array_angle)
-        self.array_distances = np.hstack(list_array_distance)
-        self.array = np.concatenate([self.array_angle, self.array_distances])
-        self._feature_names = [str(a) + '_angle' for a in self.vocab] + [str(a)  + '_distance' for a in self.vocab]
+                    res = parallel(
+                        delayed(self.get_relative_positions)(vocab_i, list_plain_words_in_page, df) for vocab_i in
+                        vocab)
+                    array_angle = np.array([r[0] for r in res]).T
+                    array_distance = np.array([r[0] for r in res]).T
+                    list_array_angle.extend(array_angle)
+                    list_array_distance.extend(array_distance)
+        self.array_angle = np.vstack(list_array_angle)
+        self.array_distances = np.vstack(list_array_distance)
+        self.array = np.concatenate([self.array_angle.T, self.array_distances.T])
+        self._feature_names = [str(a) + '_angle' for a in self.vocab] + [str(a) + '_distance' for a in self.vocab]
 
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
-        return np.transpose(self.array)
+        return self.array.T
 
 
     def transform(self, X: List[Document]):
@@ -154,6 +189,9 @@ class WindowTransformerList(XtractVectorizer):
 
 
 class BoxPositionGetter(TransformerMixin, BaseEstimator):
+    """
+    Transforms the box position given with min_x, max_y, min_y, max_y in two values x y being the center of the box
+    """
     def fit(self, X, y=None):
         return self
 
@@ -163,9 +201,13 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
         return X[["middle_x", "middle_y"]]
 
     def transform(self, X):
+        print('Transforming with BoxPositionGetter')
         return X.apply(self.find_middle, axis=1).to_numpy()
 
 class ContainsDigit(TransformerMixin, BaseEstimator):
+    """
+    Check if a string contains digits
+    """
     def fit(self, X, y=None):
         return self
 
@@ -173,9 +215,13 @@ class ContainsDigit(TransformerMixin, BaseEstimator):
         return len(re.findall(r"\d", str(x))) > 0
 
     def transform(self, X):
+        print('Transforming with ContainsDigit')
         return np.stack([X['word'].apply(lambda x: self.contains_digit(x)).to_numpy().astype(int)], axis =1)
 
 class IsPrenom(TransformerMixin, BaseEstimator):
+    """
+    Check if a string is a prenom. The list of prenom is the french prenom from INSEE dataset
+    """
     def __init__(self):
         with open('src/salaire/prenoms_fr_1900_2020.txt', 'r', encoding='UTf_8') as f:
             self.prenom_list = [line.strip().lower() for line in f.readlines()]
@@ -184,12 +230,20 @@ class IsPrenom(TransformerMixin, BaseEstimator):
         return self
 
     def is_prenom(self, x):
-        return str(x).lower() in self.prenom_list
+        try:
+            return str(x).lower() in self.prenom_list
+        except:
+            return False
 
     def transform(self, X):
+        print("Transforming IsPrenom")
         return np.stack([X['word'].apply(lambda x: self.is_prenom(x)).to_numpy().astype(int)], axis=1)
 
 class IsNom (TransformerMixin, BaseEstimator):
+    """
+    Check if a string is a nom. The list of nom is the french nom from INSEE dataset
+    """
+
     def __init__(self):
         with open('src/salaire/noms.txt', 'r') as f:
             self.nom_list = [line.strip().lower() for line in f.readlines()]
@@ -198,9 +252,13 @@ class IsNom (TransformerMixin, BaseEstimator):
         return self
 
     def is_nom(self, x):
-        return str(x).lower() in self.nom_list
+        try:
+            return str(x).lower() in self.nom_list
+        except:
+            return False
 
     def transform(self, X):
+        print("Transforming IsNom")
         return np.stack([X['word'].apply(lambda x: self.is_nom(x)).to_numpy().astype(int)], axis=1)
 
 class IsDate (TransformerMixin, BaseEstimator):
@@ -214,16 +272,24 @@ class IsDate (TransformerMixin, BaseEstimator):
             return False
 
     def transform(self, X):
+        # pandarallel.initialize(progress_bar=True)
+        print("Transforming IsDate")
         return np.stack([X['word'].apply(lambda x: self.is_date(x)).to_numpy().astype(int)], axis=1)
 
 class BagOfWordInLine(XtractVectorizer):
+    """
+    This vectorizer clusters the document by lines with Jenks Natural Breaks.
+    It then finds all the words contained in a line a calculate a vector with CountVectorizer
+    The vector gets calculated for every word in the document
+    """
+
     def _transform(self, doct_documents: pd.DataFrame, **kwargs):
         print(f"vocab that will be used for transform {self.vocab}")
 
         self.array_lines = np.zeros(doct_documents.shape[0])
         self.array_bows = np.zeros((doct_documents.shape[0],len(self.vectorizer.get_feature_names())))
         i = 0
-        for doc in doct_documents['document_name'].unique():
+        for doc in tqdm(doct_documents['document_name'].unique()):
             for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
                 df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)].copy()
 
@@ -270,10 +336,3 @@ def get_doctr_info(img_path: Path) -> Document:
     # result.show(doc)
     return result
 
-
-def get_list_words_in_page(page: Document):
-    list_words_in_page = []
-    for block in page.blocks:
-        for line in block.lines:
-            list_words_in_page.extend(line.words)
-    return list_words_in_page
