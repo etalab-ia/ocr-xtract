@@ -2,7 +2,7 @@ from pathlib import Path
 
 from src.salaire.annotation_utils import LabelStudioConvertor
 
-annotation_json = Path("data/salary/annotated_test.json")
-output_path = Path("data/salary/annotated_test.csv")
+annotation_json = Path("data/salary/annotated_train.json")
+output_path = Path("data/salary/annotated_train.csv")
 
 LabelStudioConvertor(annotation_json, output_path).transform()
