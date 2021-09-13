@@ -11,6 +11,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
 
+RUN python -m spacy download fr_core_news_lg
+
 COPY . . 
 WORKDIR . 
 CMD [ "streamlit", "run", "app_local.py", "--server.enableCORS=false", "--server.enableXsrfProtection=false","--server.enableWebsocketCompression=false" ]
