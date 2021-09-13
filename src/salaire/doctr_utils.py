@@ -1,3 +1,4 @@
+import sys
 import difflib
 from collections import Counter
 from pathlib import Path
@@ -7,7 +8,8 @@ import re
 
 from joblib import Parallel, delayed
 from tqdm import tqdm
-# from pandarallel import pandarallel
+
+import swifter
 
 import numpy as np
 from doctr.models import ocr_predictor
@@ -113,6 +115,7 @@ class WindowTransformerList(XtractVectorizer):
 
 
     def _transform(self, doct_documents: pd.DataFrame, **kwargs):
+        print(f"Transforming {self.__class__.__name__}")
         print(f"vocab that will be used for transform {self.vocab}")
         list_array_angle = []
         list_array_distance = []
@@ -188,6 +191,19 @@ class WindowTransformerList(XtractVectorizer):
         return features
 
 
+class ParallelWordTransformer(TransformerMixin, BaseEstimator):
+    def fit(self, X, y=None):
+        return self
+
+    def func(self, x):
+        return x
+
+    def transform(self, X):
+        # pandarallel.initialize(progress_bar=True)
+        print(f"Transforming with {self.__class__.__name__}")
+        return np.stack([X['word'].swifter.apply(lambda x: self.func(x)).to_numpy().astype(int)], axis=1)
+
+
 class BoxPositionGetter(TransformerMixin, BaseEstimator):
     """
     Transforms the box position given with min_x, max_y, min_y, max_y in two values x y being the center of the box
@@ -201,80 +217,58 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
         return X[["middle_x", "middle_y"]]
 
     def transform(self, X):
-        print('Transforming with BoxPositionGetter')
+        print(f"Transforming with {self.__class__.__name__}")
         return X.apply(self.find_middle, axis=1).to_numpy()
 
-class ContainsDigit(TransformerMixin, BaseEstimator):
+class ContainsDigit(ParallelWordTransformer):
     """
     Check if a string contains digits
     """
-    def fit(self, X, y=None):
-        return self
-
-    def contains_digit(self, x):
+    def func(self, x):
         return len(re.findall(r"\d", str(x))) > 0
 
-    def transform(self, X):
-        print('Transforming with ContainsDigit')
-        return np.stack([X['word'].apply(lambda x: self.contains_digit(x)).to_numpy().astype(int)], axis =1)
 
-class IsPrenom(TransformerMixin, BaseEstimator):
+class IsPrenom(ParallelWordTransformer):
     """
     Check if a string is a prenom. The list of prenom is the french prenom from INSEE dataset
     """
     def __init__(self):
+        super().__init__()
         with open('src/salaire/prenoms_fr_1900_2020.txt', 'r', encoding='UTf_8') as f:
             self.prenom_list = [line.strip().lower() for line in f.readlines()]
 
-    def fit(self, X, y=None):
-        return self
-
-    def is_prenom(self, x):
+    def func(self, x):
         try:
             return str(x).lower() in self.prenom_list
         except:
             return False
 
-    def transform(self, X):
-        print("Transforming IsPrenom")
-        return np.stack([X['word'].apply(lambda x: self.is_prenom(x)).to_numpy().astype(int)], axis=1)
 
-class IsNom (TransformerMixin, BaseEstimator):
+class IsNom (ParallelWordTransformer):
     """
     Check if a string is a nom. The list of nom is the french nom from INSEE dataset
     """
 
     def __init__(self):
+        super().__init__()
         with open('src/salaire/noms.txt', 'r') as f:
             self.nom_list = [line.strip().lower() for line in f.readlines()]
 
-    def fit(self, X, y=None):
-        return self
 
-    def is_nom(self, x):
+    def func(self, x):
         try:
             return str(x).lower() in self.nom_list
         except:
             return False
 
-    def transform(self, X):
-        print("Transforming IsNom")
-        return np.stack([X['word'].apply(lambda x: self.is_nom(x)).to_numpy().astype(int)], axis=1)
 
-class IsDate (TransformerMixin, BaseEstimator):
-    def fit(self, X, y=None):
-        return self
-
-    def is_date(self, x):
+class IsDate (ParallelWordTransformer):
+    def func(self, x):
         if len(re.findall(r"\d", str(x))) > 0: #check  only if there are digits otherwise it takes too long
             return dateparser.parse(str(x).lower()) is not None
         else:
             return False
 
-    def transform(self, X):
-        # pandarallel.initialize(progress_bar=True)
-        print("Transforming IsDate")
-        return np.stack([X['word'].apply(lambda x: self.is_date(x)).to_numpy().astype(int)], axis=1)
 
 class BagOfWordInLine(XtractVectorizer):
     """
@@ -284,6 +278,7 @@ class BagOfWordInLine(XtractVectorizer):
     """
 
     def _transform(self, doct_documents: pd.DataFrame, **kwargs):
+        print(f"Transforming {self.__class__.__name__}")
         print(f"vocab that will be used for transform {self.vocab}")
 
         self.array_lines = np.zeros(doct_documents.shape[0])
@@ -336,3 +331,9 @@ def get_doctr_info(img_path: Path) -> Document:
     # result.show(doc)
     return result
 
+def get_list_words_in_page(page: Document):
+    list_words_in_page = []
+    for block in page.blocks:
+        for line in block.lines:
+            list_words_in_page.extend(line.words)
+    return list_words_in_page
