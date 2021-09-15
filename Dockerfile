@@ -13,6 +13,9 @@ RUN apt-get update \
 
 RUN python -m spacy download fr_core_news_lg
 
-COPY . . 
-WORKDIR . 
+COPY download_doctr_models.py .
+RUN python download_doctr_models.py
+
+COPY . .
+WORKDIR .
 CMD [ "streamlit", "run", "app_local.py", "--server.enableCORS=false", "--server.enableXsrfProtection=false","--server.enableWebsocketCompression=false" ]
