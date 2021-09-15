@@ -12,12 +12,12 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline
 
-from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, BagOfWordInLine
+from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, BagOfWordInLine, IsPrenom
 import numpy as np
 
 
-data_train = pd.read_csv("./data/batch_1_Robin/cni_annotated_train.csv", sep='\t')
-data_test = pd.read_csv("./data/batch_1_Robin/cni_annotated_test.csv", sep='\t')
+data_train = pd.read_csv("./data/cni_recto_csv_for_training/train_annotated.csv", sep='\t')
+data_test = pd.read_csv("./data/cni_recto_csv_for_training/test_annotated.csv", sep='\t')
 columns = data_train.columns.to_list()
 columns.remove('label')
 X_train, y_train = data_train[columns], data_train["label"]
@@ -31,7 +31,7 @@ X_test, y_test = data_test[columns], data_test["label"]
 # y_train = lb.fit_transform(y_train)
 # y_test = lb.transform(y_test)
 
-wt = WindowTransformerList()
+wt = IsPrenom()
 X_train = wt.fit_transform(X_train)
 X_test = wt.transform(X_test)
 
