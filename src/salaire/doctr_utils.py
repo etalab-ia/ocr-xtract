@@ -207,7 +207,9 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
     def transform(self, X):
         # pandarallel.initialize(progress_bar=True)
         print(f"Transforming with {self.__class__.__name__}")
-        return np.stack([X['word'].swifter.apply(lambda x: self.func(x)).to_numpy().astype(int)], axis=1)
+        array = X['word'].to_numpy()
+        f = np.vectorize(self.func)
+        return np.stack([f(array)], axis=1)
 
 
 class BoxPositionGetter(TransformerMixin, BaseEstimator):
@@ -218,13 +220,15 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
         return self
 
     def find_middle(self, X):
-        X["middle_x"] = (X['min_x'] + X["max_x"])/2
-        X["middle_y"] = (X['min_y'] + X["max_y"])/2
-        return X[["middle_x", "middle_y"]]
+        middle_x = (X['min_x'] + X["max_x"])/2
+        middle_y = (X['min_y'] + X["max_y"])/2
+        middle_x = middle_x.to_numpy()
+        middle_y = middle_y.to_numpy()
+        return np.vstack([middle_x,middle_y]).T
 
     def transform(self, X):
         print(f"Transforming with {self.__class__.__name__}")
-        return X.apply(self.find_middle, axis=1).to_numpy()
+        return self.find_middle(X)
 
 class ContainsDigit(ParallelWordTransformer):
     """
