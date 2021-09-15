@@ -1,6 +1,8 @@
 import sys
 import difflib
+from datetime import datetime
 from collections import Counter
+from functools import partial
 from pathlib import Path
 from pprint import pprint
 from typing import Optional, List, Dict
@@ -10,6 +12,9 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 import swifter
+from memory_profiler import profile
+
+import multiprocessing as mp
 
 import numpy as np
 from doctr.models import ocr_predictor
@@ -22,6 +27,7 @@ import pandas as pd
 from stop_words import get_stop_words
 
 from jenkspy import JenksNaturalBreaks
+
 
 import dateparser
 
@@ -113,16 +119,20 @@ class WindowTransformerList(XtractVectorizer):
                         array_distances[j] = distance
         return array_angles, array_distances
 
-
-    def _transform(self, doct_documents: pd.DataFrame, **kwargs):
+    def _transform(self, X: pd.DataFrame, **kwargs):
         print(f"Transforming {self.__class__.__name__}")
         print(f"vocab that will be used for transform {self.vocab}")
         list_array_angle = []
         list_array_distance = []
-        with Parallel(n_jobs=self.n_jobs) as parallel:
-            for doc in tqdm(doct_documents['document_name'].unique()):
-                for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
-                    df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)]
+        if len(X['document_name'].unique()) > 1: #this is for training or testing
+            nb_cpu = mp.cpu_count()
+        else: #this is for the inference
+            nb_cpu = 1 #limit the number of cpu to 1 to avoid memory issues in production
+        print(f'Number of CPU used by {self.__class__.__name__}: {nb_cpu}')
+        with mp.Pool(nb_cpu) as pool:
+            for doc in tqdm(X['document_name'].unique()):
+                for page_id, page in enumerate(X[X['document_name'] == doc]['page_id'].unique()):
+                    df = X[(X['document_name'] == doc) & (X['page_id'] == page)]
                     list_plain_words_in_page = self.get_words_in_page(df)
                     list_token = self.vectorizer.inverse_transform(self.vectorizer.transform(list_plain_words_in_page))
                     for i, token in enumerate(list_token):
@@ -130,23 +140,19 @@ class WindowTransformerList(XtractVectorizer):
                             list_plain_words_in_page[i] = token[0]
                     self._list_words_in_page.extend(list_plain_words_in_page)
                     vocab = self.vocab
-                    self.array_angles = np.zeros((len(vocab), len(list_plain_words_in_page)))  # false value for angle
-                    self.array_distances = np.ones((len(vocab), len(list_plain_words_in_page))) * 1  # max distance
 
-                    res = parallel(
-                        delayed(self.get_relative_positions)(vocab_i, list_plain_words_in_page, df) for vocab_i in
-                        vocab)
+                    res = pool.map(partial(self.get_relative_positions,list_plain_words_in_page=list_plain_words_in_page, df=df), vocab)
                     array_angle = np.array([r[0] for r in res]).T
                     array_distance = np.array([r[0] for r in res]).T
                     list_array_angle.extend(array_angle)
                     list_array_distance.extend(array_distance)
-        self.array_angle = np.vstack(list_array_angle)
-        self.array_distances = np.vstack(list_array_distance)
-        self.array = np.concatenate([self.array_angle.T, self.array_distances.T])
+        array_angle = np.vstack(list_array_angle)
+        array_distances = np.vstack(list_array_distance)
+        array = np.concatenate([array_angle.T, array_distances.T])
         self._feature_names = [str(a) + '_angle' for a in self.vocab] + [str(a) + '_distance' for a in self.vocab]
 
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
-        return self.array.T
+        return array.T
 
 
     def transform(self, X: List[Document]):
