@@ -32,12 +32,12 @@ You can install them as follows:
 ```shell
 brew install cairo pango gdk-pixbuf libffi
 ```
-###For Windows users
+### For Windows users
 Those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
 
 We also use `pdf2image`. For installing the requirements  are to install `poppler`
 
-###Linux
+### Linux
 If you experience trouble with Weasyprint and pango, install with this
 ```apt install python3-pip python3-cffi python3-brotli libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0```
 
