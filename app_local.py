@@ -10,8 +10,6 @@ import cv2
 import numpy as np
 
 
-
-
 def main():
     st.title('CNI-Xtractor')
     uploaded_file = st.file_uploader('Upload your file', type=['jpg', 'jpeg', 'png','pdf'])
@@ -20,7 +18,7 @@ def main():
         with open(os.path.join(os.path.join(temp_folder, uploaded_file.name)), 'wb') as f:
             f.write(uploaded_file.getvalue())
         image = RectoCNI(os.path.join(temp_folder, uploaded_file.name))
-        shutil.rmtree(temp_folder)
+        shutil.rmtree(temp_folder) #delete temp folder
         col1, col2 = st.beta_columns(2)
         col1.header("Original")
         col1.image(image.original_image, channels='BGR')
@@ -44,6 +42,7 @@ def main():
         col2.markdown(f'**Nom:** {nom}')
         col2.markdown(f'**Prénom:** {prenom}')
         col2.markdown(f'**Date de Naissance:** {date}')
+        image = None
 
 if __name__ == '__main__':
     main()
