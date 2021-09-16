@@ -325,8 +325,20 @@ class BagOfWordInLine(XtractVectorizer):
             for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
                 df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)].copy()
 
-                y = df['max_y']
-                jnb = JenksNaturalBreaks()
+                y = df['max_y'] * 100
+
+                gvf = 0.0
+                nclasses = 2
+                while gvf < .9999:
+                    gvf = self.goodness_of_variance_fit(y, nclasses)
+                    if gvf < .9999:
+                        nclasses += 1
+                    if gvf == 1.0:
+                        nclasses -= 1
+                    if nclasses > int(len(y)/2):
+                        break
+
+                jnb = JenksNaturalBreaks(nb_class=nclasses)
                 jnb.fit(y)
 
                 predicted_lines = jnb.predict(y)
