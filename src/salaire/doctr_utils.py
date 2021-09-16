@@ -149,7 +149,7 @@ class WindowTransformerList(XtractVectorizer):
         array_angle = np.vstack(list_array_angle)
         array_distances = np.vstack(list_array_distance)
         array = np.concatenate([array_angle.T, array_distances.T])
-        self._feature_names = [str(a) + '_angle' for a in self.vocab] + [str(a) + '_distance' for a in self.vocab]
+        self.feature_names_ = [str(a) + '_angle' for a in self.vocab] + [str(a) + '_distance' for a in self.vocab]
 
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return array.T
@@ -204,12 +204,17 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
     def func(self, x):
         return x
 
+    def get_feature_names(self):
+        return [self.__class__.__name__]
+
     def transform(self, X):
         # pandarallel.initialize(progress_bar=True)
         print(f"Transforming with {self.__class__.__name__}")
         array = X['word'].to_numpy()
         f = np.vectorize(self.func)
-        return np.stack([f(array)], axis=1)
+        res = np.stack([f(array)], axis=1)
+        print('Done ! ')
+        return res
 
 
 class BoxPositionGetter(TransformerMixin, BaseEstimator):
@@ -218,6 +223,9 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
     """
     def fit(self, X, y=None):
         return self
+
+    def get_feature_names(self):
+        return ["middle_x","middle_y"]
 
     def find_middle(self, X):
         middle_x = (X['min_x'] + X["max_x"])/2
@@ -287,6 +295,25 @@ class BagOfWordInLine(XtractVectorizer):
     The vector gets calculated for every word in the document
     """
 
+    def goodness_of_variance_fit(self, array, classes):
+        # get the break points
+        jen = JenksNaturalBreaks(classes)
+        jen.fit(array)
+
+        # sum of squared deviations from array mean
+        sdam = np.sum((array - array.mean()) ** 2)
+
+        # do the actual classification
+        groups = jen.group(array)
+
+        # sum of squared deviations of class means
+        sdcm = sum([np.sum((group - group.mean()) ** 2) for group in groups])
+
+        # goodness of variance fit
+        gvf = (sdam - sdcm) / sdam
+
+        return gvf
+
     def _transform(self, doct_documents: pd.DataFrame, **kwargs):
         print(f"Transforming {self.__class__.__name__}")
         print(f"vocab that will be used for transform {self.vocab}")
@@ -313,7 +340,7 @@ class BagOfWordInLine(XtractVectorizer):
                     i += 1
 
         self.array = np.vstack((self.array_lines.T, self.array_bows.T))
-        self._feature_names = ['lines'] +[f'bows_{f}' for f in self.vectorizer.get_feature_names()]
+        self.feature_names_ = ['lines'] +[f'bows_{f}' for f in self.vectorizer.get_feature_names()]
 
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return np.transpose(self.array)
