@@ -67,8 +67,14 @@ streamlit run app_local.py
 
 You can launch the app via the Dockerfile
 ```
-docker build . -t ocr_xtract
-docker run -p 8501:8501 ocr_xtract
+docker build . -t ocr_xtract:latest
+docker run -p 8501:8501 ocr_xtract:latest
+```
+
+### Training the models with Auto-sklearn
+If you want to train the models with auto-sklearn, best is to use the Dockerfile_train or install requirement_train.txt
+```
+docker build . -f Dockerfile_train -t ocr_xtract:train
 ```
 
 ## How to perform the annotation

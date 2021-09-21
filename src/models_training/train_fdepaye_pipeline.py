@@ -21,9 +21,6 @@ if __name__ == "__main__":
     data_train = pd.read_csv("./data/salary_for_training/train_annotated.csv", sep='\t')
     data_test = pd.read_csv("./data/salary_for_training/test_annotated.csv", sep='\t')
 
-    data_train['word'] = data_train['word'].apply(lambda x: str(x).encode('utf-8'))
-    data_test['word'] = data_test['word'].apply(lambda x: str(x).encode('utf-8'))
-
     columns = data_train.columns.to_list()
     columns.remove('label')
 
