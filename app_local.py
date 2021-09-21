@@ -42,7 +42,6 @@ def main():
         col2.markdown(f'**Nom:** {nom}')
         col2.markdown(f'**Prénom:** {prenom}')
         col2.markdown(f'**Date de Naissance:** {date}')
-        image = None
 
 if __name__ == '__main__':
     main()
