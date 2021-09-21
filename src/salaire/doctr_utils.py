@@ -3,6 +3,7 @@ import difflib
 from datetime import datetime
 from collections import Counter
 from functools import partial
+from math import ceil
 from pathlib import Path
 from pprint import pprint
 from typing import Optional, List, Dict
@@ -11,7 +12,6 @@ import re
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-import swifter
 from memory_profiler import profile
 
 import multiprocessing as mp
@@ -88,7 +88,8 @@ class XtractVectorizer(DictVectorizer):
             try:
                 stop_words.remove(word)
             except:
-                print(f'{word} not in stop words already')
+                pass
+                # print(f'{word.encode("uft-8")} not in stop words already')
         self.vectorizer = CountVectorizer(strip_accents='ascii', min_df=min_df, stop_words=stop_words)
         self.vectorizer.fit(self.list_words)
         self.vocab = self.vectorizer.get_feature_names()
@@ -119,33 +120,40 @@ class WindowTransformerList(XtractVectorizer):
                         array_distances[j] = distance
         return array_angles, array_distances
 
+    def treat_doc(self, doc, X):
+        for page_id, page in enumerate(X[X['document_name'] == doc]['page_id'].unique()):
+            df = X[(X['document_name'] == doc) & (X['page_id'] == page)]
+            list_plain_words_in_page = self.get_words_in_page(df)
+            list_token = self.vectorizer.inverse_transform(self.vectorizer.transform(list_plain_words_in_page))
+            for i, token in enumerate(list_token):
+                if len(token) > 0:
+                    list_plain_words_in_page[i] = token[0]
+            self._list_words_in_page.extend(list_plain_words_in_page)
+            vocab = self.vocab
+            res = []
+            for voc in vocab:
+                res.append(
+                    self.get_relative_positions(vocab_i=voc, list_plain_words_in_page=list_plain_words_in_page, df=df))
+            array_angle = np.array([r[0] for r in res]).T
+            array_distance = np.array([r[0] for r in res]).T
+            return array_angle, array_distance
+
+
     def _transform(self, X: pd.DataFrame, **kwargs):
         print(f"Transforming {self.__class__.__name__}")
         print(f"vocab that will be used for transform {self.vocab}")
-        list_array_angle = []
-        list_array_distance = []
         if len(X['document_name'].unique()) > 1: #this is for training or testing
             nb_cpu = mp.cpu_count()
         else: #this is for the inference
             nb_cpu = 1 #limit the number of cpu to 1 to avoid memory issues in production
         print(f'Number of CPU used by {self.__class__.__name__}: {nb_cpu}')
         with mp.Pool(nb_cpu) as pool:
-            for doc in tqdm(X['document_name'].unique()):
-                for page_id, page in enumerate(X[X['document_name'] == doc]['page_id'].unique()):
-                    df = X[(X['document_name'] == doc) & (X['page_id'] == page)]
-                    list_plain_words_in_page = self.get_words_in_page(df)
-                    list_token = self.vectorizer.inverse_transform(self.vectorizer.transform(list_plain_words_in_page))
-                    for i, token in enumerate(list_token):
-                        if len(token) > 0:
-                            list_plain_words_in_page[i] = token[0]
-                    self._list_words_in_page.extend(list_plain_words_in_page)
-                    vocab = self.vocab
+            arrays = list(tqdm(pool.imap(partial(self.treat_doc, X=X), X['document_name'].unique()), total=len(X['document_name'].unique())))
 
-                    res = pool.map(partial(self.get_relative_positions,list_plain_words_in_page=list_plain_words_in_page, df=df), vocab)
-                    array_angle = np.array([r[0] for r in res]).T
-                    array_distance = np.array([r[0] for r in res]).T
-                    list_array_angle.extend(array_angle)
-                    list_array_distance.extend(array_distance)
+
+        list_array_angle = [a[0] for a in arrays]
+        list_array_distance = [a[1] for a in arrays]
+
         array_angle = np.vstack(list_array_angle)
         array_distances = np.vstack(list_array_distance)
         array = np.concatenate([array_angle.T, array_distances.T])

@@ -66,6 +66,10 @@ streamlit run app_local.py
 ```
 
 You can launch the app via the Dockerfile
+```
+docker build . -t ocr_xtract
+docker run -p 8501:8501 ocr_xtract
+```
 
 ## How to perform the annotation
 ### CNI 

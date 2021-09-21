@@ -12,8 +12,7 @@ from src.salaire.doctr_utils import get_list_words_in_page
 
 class DoctrTransformer:
     def __init__(self):
-        if not hasattr(self, "doctr_model"):
-            self.doctr_model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
+        pass
 
     def fit(self):
         return self
@@ -23,6 +22,8 @@ class DoctrTransformer:
         return doctr_documents
 
     def _get_doctr_docs(self, raw_documents: List[Path]):
+        if not hasattr(self, "doctr_model"):
+            self.doctr_model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
         list_doctr_docs = []
         for doc in raw_documents:
             if not doc.exists():
