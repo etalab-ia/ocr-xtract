@@ -205,26 +205,6 @@ class WindowTransformerList(XtractVectorizer):
         return features
 
 
-class ParallelWordTransformer(TransformerMixin, BaseEstimator):
-    def fit(self, X, y=None):
-        return self
-
-    def func(self, x):
-        return x
-
-    def get_feature_names(self):
-        return [self.__class__.__name__]
-
-    def transform(self, X):
-        # pandarallel.initialize(progress_bar=True)
-        print(f"Transforming with {self.__class__.__name__}")
-        array = X['word'].to_numpy()
-        f = np.vectorize(self.func)
-        res = np.stack([f(array)], axis=1)
-        print('Done ! ')
-        return res
-
-
 class BoxPositionGetter(TransformerMixin, BaseEstimator):
     """
     Transforms the box position given with min_x, max_y, min_y, max_y in two values x y being the center of the box
@@ -246,13 +226,52 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
         print(f"Transforming with {self.__class__.__name__}")
         return self.find_middle(X)
 
+
+class ParallelWordTransformer(TransformerMixin, BaseEstimator):
+    def fit(self, X, y=None):
+        return self
+
+    def func(self, res: np.array, it: int, array):
+        return array
+
+    def fmp(self, i, nb_blocks, x):
+        it = ceil(len(x) / nb_blocks)
+        test_data = x[i*it:(i+1)*it]
+        res = np.zeros(len(test_data))
+        self.func(res, len(test_data), test_data)
+        return res
+
+    def get_feature_names(self):
+        return [self.__class__.__name__]
+
+    def transform(self, X: pd.DataFrame):
+        # pandarallel.initialize(progress_bar=True)
+        print(f"Transforming with {self.__class__.__name__}")
+        if len(X['document_name'].unique()) > 1: #this is for training or testing
+            nb_cpu = mp.cpu_count()
+        else: #this is for the inference
+            nb_cpu = 1 #limit the number of cpu to 1 to avoid memory issues in production
+        print(f'Number of CPU used by {self.__class__.__name__}: {nb_cpu}')
+
+        array = X['word'].to_numpy()
+        nb_blocks = nb_cpu * 2
+        with mp.Pool(nb_cpu) as pool:
+            arrays = list(
+                tqdm(pool.imap(partial(self.fmp, nb_blocks=nb_blocks, x=array), range(nb_blocks)), total=nb_blocks))
+        res = np.hstack(arrays)
+        res.resize((len(res), 1))
+        print('Done ! ')
+        return res
+
+
 class ContainsDigit(ParallelWordTransformer):
     """
     Check if a string contains digits
     """
-    def func(self, x):
-        return len(re.findall(r"\d", str(x))) > 0
-
+    def func(self, res, it, array):
+        for j in range(it):
+            x = array[j]
+            res[j] = len(re.findall(r"\d", str(x))) > 0
 
 class IsPrenom(ParallelWordTransformer):
     """
@@ -263,12 +282,13 @@ class IsPrenom(ParallelWordTransformer):
         with open('src/salaire/prenoms_fr_1900_2020.txt', 'r', encoding='UTf_8') as f:
             self.prenom_list = [line.strip().lower() for line in f.readlines()]
 
-    def func(self, x):
-        try:
-            return str(x).lower() in self.prenom_list
-        except:
-            return False
-
+    def func(self, res, it, array):
+        for j in range(it):
+            x = array[j]
+            try:
+                res[j] = str(x).lower() in self.prenom_list
+            except:
+                res[j] = False
 
 class IsNom (ParallelWordTransformer):
     """
@@ -281,19 +301,24 @@ class IsNom (ParallelWordTransformer):
             self.nom_list = [line.strip().lower() for line in f.readlines()]
 
 
-    def func(self, x):
-        try:
-            return str(x).lower() in self.nom_list
-        except:
-            return False
+    def func(self,  res, it, array):
+        for j in range(it):
+            x = array[j]
+            try:
+                res[j] = str(x).lower() in self.nom_list
+            except:
+                res[j] = False
 
 
 class IsDate (ParallelWordTransformer):
-    def func(self, x):
-        if len(re.findall(r"\d", str(x))) > 0: #check  only if there are digits otherwise it takes too long
-            return dateparser.parse(str(x).lower()) is not None
-        else:
-            return False
+    def func(self, res, it, array):
+        for j in range(it):
+            x = array[j]
+            if len(re.findall(r"\d", str(x))) > 0:  # check  only if there are digits otherwise it takes too long
+                res[j] = dateparser.parse(str(x).lower()) is not None
+            else:
+                res[j] = False
+        return res
 
 
 class BagOfWordInLine(XtractVectorizer):
