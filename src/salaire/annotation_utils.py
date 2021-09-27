@@ -165,7 +165,7 @@ class LabelStudioConvertor:
         df_annotations["word"] = df_annotations["meta.text"].apply(lambda x: x[0] if isinstance(x, list) else x)
         df_annotations["page_id"] = 0
         df_annotations["max_x"] = df_annotations["min_x"] + df_annotations["value.width"]
-        df_annotations["max_y"] = df_annotations["min_x"] + df_annotations["value.width"]
+        df_annotations["max_y"] = df_annotations["min_y"] + df_annotations["value.height"]
         df_annotations["document_name"] = df_annotations["data.image"].apply(lambda x: x.split("/")[-1])
 
         # keep only minimal columns
