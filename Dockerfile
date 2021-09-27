@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:latest-gpu
+FROM python:3.7-buster
 
 COPY requirements.txt requirements.txt
 
@@ -11,6 +11,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
 
-COPY . . 
-WORKDIR . 
+RUN python -m spacy download fr_core_news_lg
+
+COPY download_doctr_models.py .
+RUN python download_doctr_models.py
+
+COPY . .
+WORKDIR .
 CMD [ "streamlit", "run", "app_local.py", "--server.enableCORS=false", "--server.enableXsrfProtection=false","--server.enableWebsocketCompression=false" ]
