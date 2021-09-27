@@ -12,26 +12,26 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline
 
-from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter
+from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, BagOfWordInLine, IsPrenom
 import numpy as np
 
 
-data_train = pd.read_csv("data/CNI_recto_aligned_linux/annotation_train.csv", sep='\t')
-data_test = pd.read_csv("data/CNI_recto_aligned_linux/annotation_test.csv", sep='\t')
+data_train = pd.read_csv("./data/cni_recto_csv_for_training/train_annotated.csv", sep='\t')
+data_test = pd.read_csv("./data/cni_recto_csv_for_training/test_annotated.csv", sep='\t')
 columns = data_train.columns.to_list()
 columns.remove('label')
 X_train, y_train = data_train[columns], data_train["label"]
 X_test, y_test = data_test[columns], data_test["label"]
 
-bp = BoxPositionGetter()
-X_train_pos = bp.transform(X_train)
-X_test_pos = bp.transform(X_test)
+# bp = BoxPositionGetter()
+# X_train_pos = bp.transform(X_train)
+# X_test_pos = bp.transform(X_test)
+#
+# lb = LabelBinarizer()
+# y_train = lb.fit_transform(y_train)
+# y_test = lb.transform(y_test)
 
-lb = LabelBinarizer()
-y_train = lb.fit_transform(y_train)
-y_test = lb.transform(y_test)
-
-wt = WindowTransformerList()
+wt = IsPrenom()
 X_train = wt.fit_transform(X_train)
 X_test = wt.transform(X_test)
 
@@ -45,8 +45,8 @@ X_test = wt.transform(X_test)
 # X_test_is_left = np.where(np.logical_or(np.pi -0.1 < X_test_angle, X_test_angle < -np.pi + 0.1), 1.0,0.0)
 
 
-X_train = np.concatenate([X_train, X_train_pos], axis=1)
-X_test = np.concatenate([X_test, X_test_pos], axis=1)
+# X_train = np.concatenate([X_train, X_train_pos], axis=1)
+# X_test = np.concatenate([X_test, X_test_pos], axis=1)
 
 
 

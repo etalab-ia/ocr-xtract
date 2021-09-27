@@ -26,16 +26,20 @@ For now, only a POC is avaible for extracting information for French DNI
 * Fork this repo 
 * Install requirements : `pip install -r requirements.txt`
 
-Since we use [doctr](https://mindee.github.io/doctr/), you will need extra dependencies if you are not running Linux.
+Since we use [doctr](https://mindee.github.io/doctr/), you will need extra dependencies.
 ### For MacOS users
 You can install them as follows:
 ```shell
 brew install cairo pango gdk-pixbuf libffi
 ```
-###For Windows users
+### For Windows users
 Those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
 
 We also use `pdf2image`. For installing the requirements  are to install `poppler`
+
+### Linux
+If you experience trouble with Weasyprint and pango, install with this
+```apt install python3-pip python3-cffi python3-brotli libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0```
 
 ### Windows
 Windows users will have to build or download poppler for Windows. I recommend [@oschwartz10612 version](https://github.com/oschwartz10612/poppler-windows/releases/) which is the most up-to-date. You will then have to add the `bin/` folder to [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) or use `poppler_path = r"C:\path\to\poppler-xx\bin" as an argument` in `convert_from_path`.
@@ -62,6 +66,16 @@ streamlit run app_local.py
 ```
 
 You can launch the app via the Dockerfile
+```
+docker build . -t ocr_xtract:latest
+docker run -p 8501:8501 ocr_xtract:latest
+```
+
+### Training the models with Auto-sklearn
+If you want to train the models with auto-sklearn, best is to use the Dockerfile_train or install requirement_train.txt
+```
+docker build . -f Dockerfile_train -t ocr_xtract:train
+```
 
 ## How to perform the annotation
 ### CNI 
@@ -83,6 +97,7 @@ docker run -it -p 8080:8080 -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\da
 ```
 
 5. Create an annotation project :
+   - name your project
    - import the json file generated in step 2.
    - select object detection with Bounding Boxes in Labeling Setup
    - Input the label you want to have for the annotation.

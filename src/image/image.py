@@ -3,6 +3,9 @@ import pickle
 import shutil
 from tempfile import TemporaryFile, mkdtemp
 
+import psutil
+from memory_profiler import profile
+
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -10,7 +13,9 @@ import pytesseract
 from pathlib import Path
 from collections import Counter
 
-import PIL as pil
+import PIL.Image as Image
+Image.MAX_IMAGE_PIXELS = None
+# used to bypass PIL.Image.DecompressionBombError that prevents from opening large files
 
 from doctr.documents import DocumentFile
 from joblib import load
@@ -50,13 +55,27 @@ class Image():
         self.classifier = None
         self.label_binarizer = None
 
+
     def load_image(self, image_path):
         if image_path.suffix == '.pdf':
-            return np.array(convert_pdf_to_image(image_path)[0])[:, :, ::-1] #convert to numpy and BGR instead of RGB
+            img = np.array(convert_pdf_to_image(image_path)[0])[:, :, ::-1] #convert to numpy and BGR instead of RGB
         else:
-            return cv2.imread(str(image_path))
+            img = cv2.imread(str(image_path))
+
+        # reduce image size when it's too large:
+        max_size = 25000000
+        if img.size > max_size:
+            scaling = np.sqrt(max_size / img.size)
+            img = cv2.resize(img, (0,0), fx=scaling, fy=scaling, interpolation=cv2.INTER_NEAREST)
+
+        return img
+
 
     def save(self, image_path):
+        pre, ext = os.path.splitext(image_path)
+        if ext == '.pdf':
+            #if original image is a pdf, save as a png
+            image_path = pre + '.png'
         if self.aligned_image is not None:
             cv2.imwrite(image_path, self.aligned_image)
         elif self.cleaned_image is not None:
@@ -76,13 +95,11 @@ class Image():
             ht, wt = templateGray.shape
             scaling = min(ho/ht, wo/wt)
             templateGray = cv2.resize(templateGray,None,fx=scaling, fy=scaling, interpolation = cv2.INTER_LINEAR)
-
             # Initiate SIFT detector
             sift = cv2.SIFT_create()
             # find the keypoints and descriptors with SIFT
             kp1, des1 = sift.detectAndCompute(templateGray, None)
             kp2, des2 = sift.detectAndCompute(imageGray, None)
-
             FLANN_INDEX_KDTREE = 1
             index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
             search_params = dict(checks=100)
@@ -93,18 +110,21 @@ class Image():
             for m, n in matches:
                 if m.distance < 0.7 * n.distance:
                     good.append(m)
-
             src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-            M, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
-            matchesMask = mask.ravel().tolist()
-            h, w = templateGray.shape
-            # pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
-            # dst = cv2.perspectiveTransform(pts, M)
-            # im2 = cv2.polylines(self.original_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
-            self.aligned_image = cv2.warpPerspective(self.original_image, M, (w,h))
+            try:
+                M, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+                h, w = templateGray.shape
+                # pts = np.float32([[0, 0], [0, h - 1], [w - 1, h - 1], [w - 1, 0]]).reshape(-1, 1, 2)
+                # dst = cv2.perspectiveTransform(pts, M)
+                # im2 = cv2.polylines(self.original_image, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)
+                self.aligned_image = cv2.warpPerspective(self.original_image, M, (w,h))
+            except:
+                self.aligned_image = None
+                print('Image cannot be aligned')
 
             if debug:
+                matchesMask = mask.ravel().tolist()
                 draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
                                    singlePointColor=None,
                                    matchesMask=matchesMask,  # draw only inliers
@@ -166,6 +186,32 @@ class Image():
 
         return self.extracted_information
 
+    def extract_results (self, X):
+        """
+        get the results from labelisation
+        :param X: dataframe
+        :return:
+
+                extracted_information = {}
+        y_list = X.label.tolist()
+        list_words = X.word.to_list()
+        for w, l in zip(list_words,y_list):
+            if l != 'O':
+                if l not in extracted_information.keys():
+                    extracted_information[l] = {}
+                    extracted_information[l]['field'] = [w]
+                else:
+                    extracted_information[l]['field'].append(w)
+        """
+        extracted_information ={}
+        list_info = X['label'].unique()
+        for info in list_info:
+            # TODO : once we'll have line identification, we need to read by lines
+            list_words = X[X['label'] == info].sort_values(['min_x'])['word'].to_list()
+            extracted_information[info] = {}
+            extracted_information[info]['field'] = list_words
+        return extracted_information
+
     def extract_information(self, debug=False):
         if self.aligned_image is None:
             self.align_images(debug=debug)
@@ -175,19 +221,11 @@ class Image():
         doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))])
         dataset_creator = AnnotationDatasetCreator()
         X = dataset_creator.transform(doc)
-        print(X)
         shutil.rmtree(temp_folder)
-        y = self.classifier.predict(X)
+        X['label'] = self.classifier.predict(X)
+        # print(X)
         # y = self.label_binarizer.inverse_transform(y)
-        y_list = y.tolist()
-        list_words = X.word.to_list()
-        for w, l in zip(list_words,y_list):
-            if l != 'O':
-                if l not in self.extracted_information.keys():
-                    self.extracted_information[l] = {}
-                    self.extracted_information[l]['field'] = [w]
-                else:
-                    self.extracted_information[l]['field'].append(w)
+        self.extracted_information = self.extract_results(X)
         return self.extracted_information
 
     def quality_ocr(self):
@@ -254,14 +292,14 @@ class RectoCNI(Image):
         super().__init__(image_path, reference_path)
         self.zones = {
             'nom': {"value": "Nom :", "title": (448, 212, 524, 242), "field": (525, 210, 800, 270)},
-            'prenom': {"value": "Prénom(s) :", "title": (448, 294, 576, 329), "field": (570, 280, 1500, 350)},
-            'date_de_naissance': {"value": "Né(e) le :", "title": (745, 375, 850, 410),
+            'prenom': {"value": "Prenom(s) :", "title": (448, 294, 576, 329), "field": (570, 280, 1500, 350)},
+            'date_de_naissance': {"value": "Ne(e) le :", "title": (745, 375, 850, 410),
                                   "field": (860, 370, 1060, 430)},
             'sexe': {'value': 'Sexe', 'title': (447, 381, 527, 415)},
             'taille': {'value': 'Taille :', 'title': (451, 466, 537, 492)},
             'signature': {'value': 'Signature', 'title': (449, 503, 570, 537)},
             'du_titulaire': {'value': 'du titulaire :', 'title': (449, 538, 611, 567)},
-            'nationalite_francaise': {'value': 'Nationalité Française', 'title': (920, 143, 1179, 180)},
+            'nationalite_francaise': {'value': 'Nationalite Francaise', 'title': (920, 143, 1179, 180)},
             "carte_nationale": {'value': 'CARTE NATIONALE', 'title': (130, 160, 376, 192)}
         }
         with open("./model/CNI_model", 'rb') as data_model:
@@ -281,9 +319,30 @@ class VersoCNI(Image):
 
 
 if __name__ == "__main__":
-    image = RectoCNI('data\CNI_caro2.jpg')
-    image = RectoCNI(r'data\CNI_4b0abc07-168d-42da-a2c7-c7e1c5ba159a.jpg')
-    # best_score = image.tune_preprocessing()
-    # image.clean(debug=True)
-    # image.extract_ocr()
-    image.extract_information()
+    from datetime import datetime
+    import time
+    global start
+    start = datetime.now()
+    print(start)
+    print(Path('./tutorials/model_CNI.png').exists())
+    print(os.getcwd())
+    image = RectoCNI('./data/559b3d2d-eb55-4ba6-99be-28798825d574.pdf')
+    # image = RectoCNI('./tutorials/model_CNI.png')
+    image.align_images()
+    response = image.extract_information()
+    try:
+        nom = str(response['nom']['field'])
+    except:
+        nom = 'champ non detecte'
+    try:
+        prenom = str(response['prenom']['field'])
+    except:
+        prenom = 'champ non detecte'
+    try:
+        date = str(response['date_naissance']['field'])
+    except:
+        date = 'champ non detecte'
+    print("Extracted Information")
+    print(f'**Nom:** {nom}')
+    print(f'**Prenom:** {prenom}')
+    print(f'**Date de Naissance:** {date}')
