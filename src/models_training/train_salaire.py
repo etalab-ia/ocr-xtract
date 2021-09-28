@@ -12,7 +12,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline
 
-from src.salaire.doctr_utils import WindowTransformerList
+from src.preprocessing.xtract_vectorizer import WindowTransformerList
 import numpy as np
 
 
