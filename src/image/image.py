@@ -1,10 +1,7 @@
 import os
 import pickle
 import shutil
-from tempfile import TemporaryFile, mkdtemp
-
-import psutil
-from memory_profiler import profile
+from tempfile import mkdtemp
 
 import numpy as np
 import cv2
@@ -17,10 +14,7 @@ import PIL.Image as Image
 Image.MAX_IMAGE_PIXELS = None
 # used to bypass PIL.Image.DecompressionBombError that prevents from opening large files
 
-from doctr.documents import DocumentFile
-from joblib import load
-
-from skopt import dump, gp_minimize
+from skopt import gp_minimize
 from skopt.utils import use_named_args
 from skopt.plots import plot_objective
 
@@ -28,33 +22,39 @@ from src.image.preprocessing import convert_pdf_to_image
 from src.image.remove_noise import ImageCleaning
 from src.image.utils_optimizer import LoggingCallback
 
-from src.salaire.annotation_utils import DoctrTransformer, AnnotationDatasetCreator
-from src.salaire.doctr_utils import WindowTransformerList
-
+from src.data.doctr_utils import DoctrTransformer, AnnotationDatasetCreator
 
 
 class Image():
     def __init__(self, image_path, reference_path=None):
         self.image_cleaner = ImageCleaning()
-        self.image_path = Path(image_path)
-        self.reference_path = Path(reference_path)
+        if image_path is not None:
+            self.image_path = Path(image_path)
+        else:
+            self.image_path = None
+        if reference_path is not None:
+            self.reference_path = Path(reference_path)
+        else:
+            self.reference_path = None
         if self.image_path.exists():
             self.original_image = self.load_image(self.image_path)
             self.aligned_image = None
             self.cleaned_image = None
         else:
             print("Image path does not exist")
-        if self.reference_path.exists():
+        try:
             self.reference_image = self.load_image(self.reference_path)
-        else:
+        except:
             print("Reference path does not exists")
         self.zones = {}
         self.extracted_information = {}
         self.doctr_transformer = DoctrTransformer()
         self.annotation = AnnotationDatasetCreator()
+        self.pipe_feature = None
         self.classifier = None
         self.label_binarizer = None
-
+        self.rotate_document = False
+        self.auto_ml = False # Todo : unify model trainings to separate pickles of features and classifier
 
     def load_image(self, image_path):
         if image_path.suffix == '.pdf':
@@ -70,7 +70,6 @@ class Image():
 
         return img
 
-
     def save(self, image_path):
         pre, ext = os.path.splitext(image_path)
         if ext == '.pdf':
@@ -84,7 +83,7 @@ class Image():
             cv2.imwrite(image_path, self.original_image)
 
     def align_images(self, debug=False):
-        if type(self.original_image) is not None:
+        if self.reference_path is not None:
             print(f'Aligning image with the reference now ...{self.reference_path}')
             # convert both the input image and template to grayscale
             imageGray = cv2.cvtColor(self.original_image, cv2.COLOR_BGR2GRAY)
@@ -132,7 +131,9 @@ class Image():
                 img3 = cv2.drawMatches(templateGray, kp1, imageGray, kp2, good, None, **draw_params)
                 plt.imshow(img3, 'gray'), plt.show()
 
-
+        elif type(self.original_image) is not None:
+            print("No reference Image to align original image with")
+            self.aligned_image = self.original_image
         else:
             print('No original Image to align')
 
@@ -218,13 +219,17 @@ class Image():
 
         temp_folder = mkdtemp()
         cv2.imwrite(os.path.join(temp_folder, 'temp.jpg'), self.aligned_image)
-        doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))])
+        doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))], rotate_document=self.rotate_document)
         dataset_creator = AnnotationDatasetCreator()
         X = dataset_creator.transform(doc)
+        del doc
+        del dataset_creator
         shutil.rmtree(temp_folder)
-        X['label'] = self.classifier.predict(X)
-        # print(X)
-        # y = self.label_binarizer.inverse_transform(y)
+        if self.auto_ml:
+            X_feats = self.pipe_feature.transform(X)
+            X['label'] = self.classifier.predict(X_feats)
+        else:
+            X['label'] = self.classifier.predict(X)
         self.extracted_information = self.extract_results(X)
         return self.extracted_information
 
@@ -290,23 +295,17 @@ class Image():
 class RectoCNI(Image):
     def __init__(self, image_path=None, reference_path='tutorials/model_CNI.png'):
         super().__init__(image_path, reference_path)
-        self.zones = {
-            'nom': {"value": "Nom :", "title": (448, 212, 524, 242), "field": (525, 210, 800, 270)},
-            'prenom': {"value": "Prenom(s) :", "title": (448, 294, 576, 329), "field": (570, 280, 1500, 350)},
-            'date_de_naissance': {"value": "Ne(e) le :", "title": (745, 375, 850, 410),
-                                  "field": (860, 370, 1060, 430)},
-            'sexe': {'value': 'Sexe', 'title': (447, 381, 527, 415)},
-            'taille': {'value': 'Taille :', 'title': (451, 466, 537, 492)},
-            'signature': {'value': 'Signature', 'title': (449, 503, 570, 537)},
-            'du_titulaire': {'value': 'du titulaire :', 'title': (449, 538, 611, 567)},
-            'nationalite_francaise': {'value': 'Nationalite Francaise', 'title': (920, 143, 1179, 180)},
-            "carte_nationale": {'value': 'CARTE NATIONALE', 'title': (130, 160, 376, 192)}
-        }
         with open("./model/CNI_model", 'rb') as data_model:
             self.classifier = pickle.load(data_model)
-        # with open("./model/CNI_label", 'rb') as data_lb:
-        #     self.label_binarizer = pickle.load(data_lb)
 
+class FeuilleDePaye(Image):
+    def __init__(self, image_path=None, reference_path=None):
+        super().__init__(image_path, reference_path)
+        with open("./model/fdp_model_automl", 'rb') as data_model:
+            self.pipe_feature = pickle.load(data_model)
+            self.classifier = pickle.load(data_model)
+        self.rotate_document = True
+        self.auto_ml = True
 
 class VersoCNI(Image):
     def __init__(self, image_path=None, reference_path='data/CNI_robin_verso.jpg'):
@@ -320,29 +319,12 @@ class VersoCNI(Image):
 
 if __name__ == "__main__":
     from datetime import datetime
-    import time
+
     global start
     start = datetime.now()
     print(start)
-    print(Path('./tutorials/model_CNI.png').exists())
-    print(os.getcwd())
-    image = RectoCNI('./data/559b3d2d-eb55-4ba6-99be-28798825d574.pdf')
-    # image = RectoCNI('./tutorials/model_CNI.png')
+    image = FeuilleDePaye('./data/salary/test/3aa7bf95-ec2f-492e-97fe-abbf7b6f06f6.jpg')
+    image = RectoCNI('./tutorials/model_CNI.png')
     image.align_images()
     response = image.extract_information()
-    try:
-        nom = str(response['nom']['field'])
-    except:
-        nom = 'champ non detecte'
-    try:
-        prenom = str(response['prenom']['field'])
-    except:
-        prenom = 'champ non detecte'
-    try:
-        date = str(response['date_naissance']['field'])
-    except:
-        date = 'champ non detecte'
-    print("Extracted Information")
-    print(f'**Nom:** {nom}')
-    print(f'**Prenom:** {prenom}')
-    print(f'**Date de Naissance:** {date}')
+    print(response)

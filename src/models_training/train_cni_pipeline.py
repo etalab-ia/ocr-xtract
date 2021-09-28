@@ -3,7 +3,7 @@ from pathlib import Path
 
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.preprocessing import LabelBinarizer, LabelEncoder
+from sklearn.preprocessing import LabelBinarizer, LabelEncoder, Normalizer
 
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
@@ -12,8 +12,8 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline, FeatureUnion
 
-from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, ContainsDigit, IsNom, IsPrenom, IsDate, \
-    BagOfWordInLine
+from src.preprocessing.xtract_vectorizer import WindowTransformerList, BoxPositionGetter, BagOfWordInLine
+from src.preprocessing.word_transformers import ContainsDigit, IsPrenom, IsNom, IsDate
 import numpy as np
 
 
@@ -31,7 +31,7 @@ pipe = Pipeline([
                                     ('is_digit', ContainsDigit()),
                                     ('is_nom', IsNom()),
                                     ('is_prenom', IsPrenom()),
-                                    ('is_date', IsDate())
+                                    ('is_date', IsDate()),
                                     ])),
     ('decision_tree', GradientBoostingClassifier())
 ])

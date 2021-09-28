@@ -1,25 +1,22 @@
-import json
 import logging
+import shutil
 import os
-
 from pathlib import Path
+from tempfile import mkdtemp
+
 from werkzeug.utils import secure_filename
 from flask_restful import Api, Resource, reqparse, fields, marshal
 from flask import Flask
 from flask import request, jsonify
 
-from src.document.CNI import CNI
 from src.image.image import RectoCNI
+
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 api = Api(app)
-
-UPLOAD_DIRECTORY = Path("./api/api_uploaded_files")
-if not os.path.exists(UPLOAD_DIRECTORY):
-    os.makedirs(UPLOAD_DIRECTORY)
 
 
 class OCRRectoCNI (Resource):
@@ -46,14 +43,17 @@ class OCRRectoCNI (Resource):
         if file and self.allowed_file(file.filename):
             filename = secure_filename(file.filename) #make sure we have a proper filename
             self.logger.debug(f'**found {filename}')
-            full_filename = UPLOAD_DIRECTORY / filename
+
+            temp_folder = mkdtemp()
+            full_filename = os.path.join(temp_folder, filename)
             file.save(full_filename) #saves file in folder
-            cni = RectoCNI(full_filename)
-            cni.align_images()
-            results = cni.extract_information()
-            # files are removed after use
-            os.remove(full_filename)
-            data["result"] = results
+
+            image = RectoCNI(full_filename)
+            shutil.rmtree(temp_folder)
+
+            image.align_images()
+
+            data["result"] = image.extract_information()
             data["success"] = True
         return data
 
@@ -64,4 +64,4 @@ api.add_resource(OCRRectoCNI, '/', resource_class_kwargs={
 })
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    app.run(debug=False)
