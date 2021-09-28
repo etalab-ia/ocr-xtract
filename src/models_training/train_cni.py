@@ -12,7 +12,8 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline
 
-from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, BagOfWordInLine, IsPrenom
+from src.preprocessing.xtract_vectorizer import WindowTransformerList, BoxPositionGetter, BagOfWordInLine
+from src.preprocessing.word_transformers import IsPrenom
 import numpy as np
 
 

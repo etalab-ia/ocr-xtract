@@ -3,7 +3,7 @@ from pathlib import Path
 
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.preprocessing import LabelBinarizer, LabelEncoder
+from sklearn.preprocessing import LabelBinarizer, LabelEncoder, Normalizer
 
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.svm import LinearSVC
@@ -12,8 +12,8 @@ from sklearn.tree import DecisionTreeClassifier
 
 from sklearn.pipeline import Pipeline, FeatureUnion
 
-from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, ContainsDigit, IsNom, IsPrenom, IsDate, \
-    BagOfWordInLine
+from src.preprocessing.xtract_vectorizer import WindowTransformerList, BoxPositionGetter, BagOfWordInLine
+from src.preprocessing.word_transformers import ContainsDigit, IsPrenom, IsNom, IsDate
 import numpy as np
 
 
@@ -27,16 +27,20 @@ if __name__ == "__main__":
     X_train, y_train = data_train[columns], data_train["label"]
     X_test, y_test = data_test[columns], data_test["label"]
 
+    search_words = ['salaire','net','impots','periode','revenu','avant','sarl','sas','rue']
+
+
     pipe = Pipeline([
-        ('feature_union', FeatureUnion([('window_transformer', WindowTransformerList(searched_words=['salaire','net','impots','periode','revenu'])),
-                                        ('bag_of_words', BagOfWordInLine(searched_words=['salaire','net','impots','periode','revenu'])),
-                                        # ('is_date', IsDate()),
-                                        ("position", BoxPositionGetter()),
-                                        ('is_digit', ContainsDigit()),
-                                        ('is_nom', IsNom()),
-                                        ('is_prenom', IsPrenom()),
-                                        ])),
-        ('decision_tree', GradientBoostingClassifier())
+        ('feature_union', FeatureUnion([('window_transformer', WindowTransformerList(searched_words=search_words)),
+                                ('bag_of_words', BagOfWordInLine(searched_words=search_words)),
+                                ('is_date', IsDate()),
+                                ("position", BoxPositionGetter()),
+                                ('is_digit', ContainsDigit()),
+                                ('is_nom', IsNom()),
+                                ('is_prenom', IsPrenom()),
+                                ('norm', Normalizer(norm='l2', copy=False)),
+                                ])),
+        ('decision_tree', GradientBoostingClassifier(verbose=1))
     ])
 
 
