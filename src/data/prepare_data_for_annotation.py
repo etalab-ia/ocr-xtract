@@ -11,7 +11,7 @@ Runs a baseline info extraction system. The procedure is as follows:
 
 from pathlib import Path
 
-from src.salaire.annotation_utils import DoctrTransformer, AnnotationDatasetCreator
+from src.data.doctr_utils import DoctrTransformer, AnnotationDatasetCreator
 
 IMG_FOLDER_PATH = Path("./data/salary/train")
 TRAINING_DATA_PATH = Path("./data/salary/cni_annotation_recto_train.csv")

@@ -1,4 +1,5 @@
-from src.salaire.annotation_utils import DoctrTransformer, AnnotationJsonCreator
+from src.data.annotation_utils import AnnotationJsonCreator
+from src.data.doctr_utils import DoctrTransformer
 from pathlib import Path
 import os
 

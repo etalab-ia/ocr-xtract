@@ -6,7 +6,8 @@ from sklearn.metrics import f1_score, precision_score, recall_score, classificat
 
 from sklearn.pipeline import Pipeline, FeatureUnion
 
-from src.salaire.doctr_utils import WindowTransformerList, BoxPositionGetter, ContainsDigit, IsNom, IsPrenom, IsDate
+from src.preprocessing.xtract_vectorizer import WindowTransformerList, BoxPositionGetter
+from src.preprocessing.word_transformers import ContainsDigit, IsPrenom, IsNom, IsDate
 from pickle import dump
 
 if __name__ == "__main__":
