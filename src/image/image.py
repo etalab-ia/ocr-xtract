@@ -23,7 +23,7 @@ from src.image.remove_noise import ImageCleaning
 from src.image.utils_optimizer import LoggingCallback
 
 from src.data.doctr_utils import DoctrTransformer, AnnotationDatasetCreator
-
+from scr.postprocessing.postprocessing_cni import clean_date, clean_name
 
 class Image():
     def __init__(self, image_path, reference_path=None):
@@ -230,8 +230,14 @@ class Image():
             X['label'] = self.classifier.predict(X_feats)
         else:
             X['label'] = self.classifier.predict(X)
-        self.extracted_information = self.extract_results(X)
-        return self.extracted_information
+        extracted_information = self.extract_results(X)
+        self.cleaned_results = self.clean_results(extracted_information)
+        return self.cleaned_results
+
+    def clean_results(self, extracted_information):
+        """clean results """
+        cleaned_results = extracted_information
+        return cleaned_results
 
     def quality_ocr(self):
         def shared_chars(s1, s2):
@@ -297,6 +303,12 @@ class RectoCNI(Image):
         super().__init__(image_path, reference_path)
         with open("./model/CNI_model", 'rb') as data_model:
             self.classifier = pickle.load(data_model)
+
+    def clean_results(self, extracted_information):
+        extracted_information['date_naissance']['field'] = clean_date(extracted_information['date_naissance']['field'])
+        extracted_information['nom']['field'] = clean_name(extracted_information['nom']['field'])
+
+        return extracted_information
 
 class FeuilleDePaye(Image):
     def __init__(self, image_path=None, reference_path=None):
