@@ -1,0 +1,21 @@
+version: '3'
+services:
+  ocr_api:
+    container_name: ocr_api
+    restart: always
+    build: .
+    ports:
+      - "8000:8000"
+    command: gunicorn -w 2 --timeout 90 -b 0.0.0.0:8000 api.wsgi:app
+
+  ocr_app:
+    container_name: ocr_app
+    restart: always
+    build: ./front
+    ports:
+      - "8501:8501"
+    environment:
+      - OCR_FDP_REST_API_URL=http://ocr_api:8000/fdp #${OCR_FDP_REST_API_URL}
+    command: streamlit run app.py --server.enableCORS=false --server.enableXsrfProtection=false --server.enableWebsocketCompression=false
+    depends_on:
+      - ocr_api
