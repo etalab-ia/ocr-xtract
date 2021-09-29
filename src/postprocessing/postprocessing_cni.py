@@ -66,7 +66,7 @@ def clean_names(x):
 def clean_punctuation(x):
     """remove leading and trailing punctuation"""
     if type(x) == list:
-        output =  x.strip(punctuation)
+        output = x.strip(punctuation)
     else:
         output = x
     return output
