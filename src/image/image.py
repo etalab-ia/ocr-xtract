@@ -307,7 +307,7 @@ class RectoCNI(Image):
     def clean_results(self, extracted_information):
         extracted_information['date_naissance']['field'] = clean_date(extracted_information['date_naissance']['field'])
         extracted_information['nom']['field'] = clean_name(clean_punctuation(extracted_information['nom']['field']))
-        extracted_information['prenom']['field'] = clean_punctuation(extracted_information['prenom']['field'])gi
+        extracted_information['prenom']['field'] = clean_punctuation(extracted_information['prenom']['field'])
         return extracted_information
 
 class FeuilleDePaye(Image):
