@@ -306,7 +306,7 @@ class RectoCNI(Image):
 
     def clean_results(self, extracted_information):
         extracted_information['date_naissance']['field'] = clean_date(extracted_information['date_naissance']['field'])
-        extracted_information['nom']['field'] = clean_names(extracted_information['nom']['field'])
+        extracted_information['nom']['field'] = clean_name(extracted_information['nom']['field'])
 
         return extracted_information
 

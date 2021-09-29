@@ -1,4 +1,5 @@
 import re
+from string import punctuation
 
 def clean_date(x):
     if type(x) == list:
@@ -38,16 +39,34 @@ def clean_date(x):
 
 
 def clean_names(x):
-    output = []
-    temp = ""
-    for i in x:
-        if i.lower() in ["de", "le", "du", "d'", "l'"]:
-            if i in ["d'", "l'"]:
-                temp = i
+    if type(x) == list:
+        output = []
+        temp = ""
+        counter = 0
+        for index, i in enumerate(x):
+            if i.lower() in ["de", "le", "du", "d'", "l'"]:
+                if i in ["d'", "l'"]:
+                    temp = i
+                else:
+                    temp = i + " "
+                if index > 0:
+                    temp = x[index - 1] + " " + temp
+                    del output[counter - 1]
+                    counter = counter - 1
             else:
-                temp = i + " "
-        else:
-            i = i.replace("Nom:", "").strip()
-            output.append(temp + i)
-            temp = ""
+                i = i.replace("Nom:", "").strip()
+                output.append(temp + i)
+                counter += 1
+                temp = ""
+    else:
+        output = x
+
+    return output
+
+def clean_punctuation(x):
+    """remove leading and trailing punctuation"""
+    if type(x) == list:
+        output = x.strip(punctuation)
+    else:
+        output = x
     return output
