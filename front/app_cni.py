@@ -2,13 +2,13 @@ import streamlit as st
 import requests
 import os
 
-OCR_REST_API_URL = os.getenv("OCR_FDP_REST_API_URL")
-print(OCR_REST_API_URL)
+OCR_REST_API_URL = os.getenv("OCR_CNI_REST_API_URL")
 
-st.title('FeuilledePaye-Xtractor')
+st.title('CNI-Xtractor')
 uploaded_file = st.file_uploader('Upload your file', type=['jpg', 'jpeg', 'png', 'pdf'])
 if uploaded_file:
     files = {'file': uploaded_file}
+    print(OCR_REST_API_URL)
     f = requests.post(OCR_REST_API_URL, files=files)
     # TODO : write proper message when api is down
     if f:
@@ -23,19 +23,9 @@ if uploaded_file:
         except:
             prenom = 'champ non détecté'
         try:
-            date = str(response['date']['field'])
+            date = str(response['date_naissance']['field'])
         except:
             date = 'champ non détecté'
-        try:
-            somme = str(response['somme']['field'])
-        except:
-            somme = 'champ non détecté'
-        try:
-            entreprise = str(response['entreprise']['field'])
-        except:
-            entreprise = 'champ non détecté'
         st.markdown(f'**Nom:** {nom}')
         st.markdown(f'**Prénom:** {prenom}')
-        st.markdown(f'**Date:** {date}')
-        st.markdown(f'**Entreprise:** {entreprise}')
-        st.markdown(f'**Salaire:** {somme}')
+        st.markdown(f'**Date de Naissance:** {date}')
