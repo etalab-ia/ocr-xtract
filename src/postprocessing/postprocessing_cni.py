@@ -39,6 +39,7 @@ def clean_date(x):
 
 def clean_names(x):
     output = []
+    temp = ""
     for i in x:
         if i.lower() in ["de", "le", "du", "d'", "l'"]:
             if i in ["d'", "l'"]:
