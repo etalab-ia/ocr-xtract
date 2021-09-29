@@ -23,7 +23,7 @@ from src.image.remove_noise import ImageCleaning
 from src.image.utils_optimizer import LoggingCallback
 
 from src.data.doctr_utils import DoctrTransformer, AnnotationDatasetCreator
-from scr.postprocessing.postprocessing_cni import clean_date, clean_name
+from src.postprocessing.postprocessing_cni import clean_date, clean_name, clean_punctuation
 
 class Image():
     def __init__(self, image_path, reference_path=None):
@@ -306,8 +306,8 @@ class RectoCNI(Image):
 
     def clean_results(self, extracted_information):
         extracted_information['date_naissance']['field'] = clean_date(extracted_information['date_naissance']['field'])
-        extracted_information['nom']['field'] = clean_name(extracted_information['nom']['field'])
-
+        extracted_information['nom']['field'] = clean_name(clean_punctuation(extracted_information['nom']['field']))
+        extracted_information['prenom']['field'] = clean_punctuation(extracted_information['prenom']['field'])gi
         return extracted_information
 
 class FeuilleDePaye(Image):
