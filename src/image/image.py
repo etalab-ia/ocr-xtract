@@ -23,7 +23,7 @@ from src.image.remove_noise import ImageCleaning
 from src.image.utils_optimizer import LoggingCallback
 
 from src.data.doctr_utils import DoctrTransformer, AnnotationDatasetCreator
-from scr.postprocessing.postprocessing_cni import clean_date, clean_name
+from src.postprocessing.postprocessing_cni import clean_date, clean_name
 
 class Image():
     def __init__(self, image_path, reference_path=None):
@@ -335,8 +335,8 @@ if __name__ == "__main__":
     global start
     start = datetime.now()
     print(start)
-    image = FeuilleDePaye('./data/salary/test/3aa7bf95-ec2f-492e-97fe-abbf7b6f06f6.jpg')
     image = RectoCNI('./tutorials/model_CNI.png')
+    image = FeuilleDePaye('./data/salary/test/3aa7bf95-ec2f-492e-97fe-abbf7b6f06f6.jpg')
     image.align_images()
     response = image.extract_information()
     print(response)
