@@ -1,0 +1,5 @@
+[core]
+    remote = data_ocr
+['remote "data_ocr"']
+    url = s3://object.files.data.gouv.fr/minio/labia/data_ocr/
+    endpointurl = https://object.files.data.gouv.fr/minio/labia/data_ocr/
