@@ -306,18 +306,20 @@ class RectoCNI(Image):
 
     def clean_results(self, extracted_information):
         extracted_information['date_naissance']['field'] = clean_date(extracted_information['date_naissance']['field'])
-        extracted_information['nom']['field'] = clean_name(extracted_information['nom']['field'])
+        extracted_information['nom']['field'] = clean_names(extracted_information['nom']['field'])
 
         return extracted_information
+
 
 class FeuilleDePaye(Image):
     def __init__(self, image_path=None, reference_path=None):
         super().__init__(image_path, reference_path)
-        with open("./model/fdp_model_automl", 'rb') as data_model:
+        with open("./model/fdp_model_automl_068", 'rb') as data_model:
             self.pipe_feature = pickle.load(data_model)
             self.classifier = pickle.load(data_model)
         self.rotate_document = True
         self.auto_ml = True
+
 
 class VersoCNI(Image):
     def __init__(self, image_path=None, reference_path='data/CNI_robin_verso.jpg'):

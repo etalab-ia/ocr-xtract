@@ -2,6 +2,7 @@ import multiprocessing as mp
 import re
 from functools import partial
 from math import ceil
+import unidecode
 
 import dateparser
 import numpy as np
@@ -100,10 +101,16 @@ class IsNom (ParallelWordTransformer):
 
 class IsDate (ParallelWordTransformer):
     def func(self, res, it, array):
+        list_months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre',
+                       'novembre', 'decembre']
         for j in range(it):
             x = array[j]
-            if len(re.findall(r"\d", str(x))) > 0:  # check  only if there are digits otherwise it takes too long
-                res[j] = dateparser.parse(str(x).lower()) is not None
+            if len(re.findall(r"\d", str(x))) > 0:  # check only if there are digits otherwise it takes too long
+                res[j] = True  # dateparser.parse(str(x).lower()) is not None
             else:
-                res[j] = False
+                for month in list_months:
+                    if unidecode.unidecode(str(x).lower()) in month or month in unidecode.unidecode(str(x).lower()):
+                        res[j] = True
+                    else:
+                        res[j] = False
         return res
