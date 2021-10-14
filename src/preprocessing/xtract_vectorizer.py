@@ -18,6 +18,9 @@ from stop_words import get_stop_words
 
 from jenkspy import JenksNaturalBreaks
 
+
+# TODO : add [NUMBER], [RARE] and [PAD] in vectorizer (PAD???)
+
 def goodness_of_variance_fit(array, classes):
     # get the break points
     jen = JenksNaturalBreaks(classes)
@@ -229,7 +232,7 @@ class BagOfWordInLine(XtractVectorizer):
         print(f"vocab that will be used for transform {self.vocab}")
 
         self.array_lines = np.zeros(doct_documents.shape[0])
-        self.array_bows = np.zeros((doct_documents.shape[0],len(self.vectorizer.get_feature_names())))
+        self.array_bows = np.zeros((doct_documents.shape[0], len(self.vectorizer.get_feature_names())))
         i = 0
         for doc in tqdm(doct_documents['document_name'].unique()):
             for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):

@@ -1,5 +1,7 @@
 beautifulsoup4==4.9.3
 dateparser
+dvc
+dvc[s3]
 flask-restful==0.3.9
 gunicorn==20.1.0
 imutils==0.5.4
@@ -7,9 +9,11 @@ olefile==0.46
 pdf2image==1.16.0
 Pillow>=8.0.0
 pip-chill==1.0.1
+pytest
 pytesseract==0.3.7
 -e git://github.com/etalab-ia/doctr#egg=doctr
 scikit-optimize==0.8.1
+scikit-learn==0.23.2
 sip==6.1.1
 stop-words==2018.7.23
 streamlit==0.83.0
@@ -31,5 +35,4 @@ mplcursors>=0.3
 weasyprint>=52.2
 unidecode>=1.0.0
 tqdm>=4.30.0
-gunicorn
 

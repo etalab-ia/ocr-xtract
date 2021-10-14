@@ -1,15 +1,22 @@
-from pickle import dump
-
 import pandas as pd
+from pathlib import Path
 
-from sklearn.metrics import classification_report
-from sklearn.pipeline import FeatureUnion, Pipeline
-import autosklearn.classification
-from autosklearn.metrics import f1_macro
+from sklearn.compose import TransformedTargetRegressor
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.preprocessing import LabelBinarizer, LabelEncoder, Normalizer
+
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import LinearSVC
+from sklearn.metrics import f1_score, precision_score, recall_score, classification_report
+from sklearn.tree import DecisionTreeClassifier
+
+from sklearn.pipeline import Pipeline, FeatureUnion
 
 from src.augmentation.augmentation import AugmentDocuments
 from src.preprocessing.xtract_vectorizer import WindowTransformerList, BoxPositionGetter, BagOfWordInLine
 from src.preprocessing.word_transformers import ContainsDigit, IsPrenom, IsNom, IsDate
+import numpy as np
+
 
 if __name__ == "__main__":
     data_train = pd.read_csv("./data/salary_for_training/train_annotated.csv", sep='\t')
@@ -36,26 +43,20 @@ if __name__ == "__main__":
                                 ])
 
     X_train = pipe_feature.fit_transform(X_train)
-    # df = pd.DataFrame(X_train, columns=pipe_feature.get_feature_names())
-    # df['word'] = data_train["word"] #for debug
     X_test = pipe_feature.transform(X_test)
 
-    automl = autosklearn.classification.AutoSklearnClassifier(
-        time_left_for_this_task=43200,
-        per_run_time_limit=180,
-        memory_limit=None,
-        n_jobs=16,
-        metric=f1_macro,
-        max_models_on_disc=30
-    )
-    automl.fit(X_train, y_train)
+    data = {
+        "pipe_feature": pipe_feature,
+        "X_train": X_train,
+        "y_train": y_train,
+        "X_test": X_test,
+        "y_test": y_test
+    }
 
-    print(automl.sprint_statistics())
+    from pickle import dump
+    with open('./model/fdp_data_preprocessing', 'wb') as f1:
+        dump(data, f1)
 
-    predictions = automl.predict(X_test)
 
-    print(classification_report(y_test, predictions))
 
-    with open('./model/fdp_model_automl', 'wb') as f2:
-        dump(pipe_feature,f2)
-        dump(automl, f2)
+

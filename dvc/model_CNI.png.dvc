@@ -1,0 +1,5 @@
+wdir: ../data
+outs:
+- md5: e9a846c88d277eecb46eae5cac9b3bec
+  size: 330709
+  path: model_CNI.png
