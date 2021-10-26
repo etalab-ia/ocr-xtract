@@ -24,40 +24,12 @@ from sklearn.pipeline import Pipeline, FeatureUnion
 from skopt import BayesSearchCV
 
 from src.augmentation.augmentation import AugmentDocuments
+from src.models_training.utils import select_candidate, tqdm_skopt
 from src.preprocessing.xtract_vectorizer import WindowTransformerList, BoxPositionGetter, BagOfWordInLine
 from src.preprocessing.word_transformers import ContainsDigit, IsPrenom, IsNom, IsDate
 import numpy as np
 
 
-def select_candidate(candidate_name, candidate_feature, features, X, y=None):
-    df = pd.DataFrame(X, columns=features)
-    if y is not None:
-        df['label'] = y.values
-        df.loc[df['label'] != candidate_name, 'label'] = 0
-        df.loc[df['label'] == candidate_name, 'label'] = 1
-        # TODO : downsampled negative (max ratio 40 to 1)
-    if candidate_feature is not None:
-        df = df[df[candidate_feature] >= 1]
-    if y is not None:
-        X = df.drop(columns=['label']).to_numpy()
-        y = df['label'].astype(int).to_numpy()
-        return X, y
-    else:
-        X = df.to_numpy()
-        return X
-
-
-class tqdm_skopt(object):
-    def __init__(self, **kwargs):
-        self._bar = tqdm(**kwargs)
-
-    def __call__(self, res):
-        self._bar.update()
-
-
-def f(x):
-    return (np.sin(5 * x[0]) * (1 - np.tanh(x[0] ** 2)) *
-            np.random.randn() * 0.1)
 
 def train_field_model(candidate, data, n_cv=3, n_points=1, optimize=False):
     candidate_name = candidate['training_field']
