@@ -1,0 +1,34 @@
+stages:
+  prepare_fdp:
+    cmd: python -m src.models_training.prepare data/salary_for_training/full_data_set.csv  data/salary_for_training/prepared
+    deps:
+    - data/salary_for_training/full_data_set.csv
+    - src/models_training/prepare.py
+    params:
+    - prepare.seed
+    - prepare.train_split
+    outs:
+    -  data/salary_for_training/prepared
+  featurize_fdp:
+    cmd: python -m src.models_training.featurization data/salary_for_training/prepared  data/salary_for_training/features
+    deps:
+      - data/salary_for_training/prepared
+      - src/augmentation
+      - src/preprocessing
+      - src/models_training/featurization.py
+    params:
+      - featurize.data_augmentation
+    outs:
+      - data/salary_for_training/features
+  train_fpd:
+    cmd: python -m src.models_training.train data/salary_for_training/features fdp.json model/fdp
+    deps:
+      - data/salary_for_training/features
+      - src/models_training/utils.py
+      - src/models_training/train.py
+    params:
+      - train.optimize
+      - train.n_iter
+      - train.n_estimators
+    outs:
+      - model/fdp

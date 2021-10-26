@@ -1,0 +1,13 @@
+prepare:
+  train_split: 0.80
+  seed: 20170428
+
+featurize:
+  data_augmentation: True
+
+train:
+  optimize: True
+  n_iter: 100
+  n_estimators: 200
+
+eval:
