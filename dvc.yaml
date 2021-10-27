@@ -23,6 +23,7 @@ stages:
   train_fpd:
     cmd: python -m src.models_training.train data/salary_for_training/features fdp.json model/fdp
     deps:
+      - schemes/fdp.json
       - data/salary_for_training/features
       - src/models_training/utils.py
       - src/models_training/train.py
@@ -32,3 +33,12 @@ stages:
       - train.n_estimators
     outs:
       - model/fdp
+  eval_fdp:
+    cmd: python -m src.models_training.eval data/salary_for_training/features fdp.json model/fdp
+    deps:
+      - schemes/fdp.json
+      - model/fdp
+      - data/salary_for_training/features
+      - src/models_training/utils.py
+      - src/models_training/eval.py
+
