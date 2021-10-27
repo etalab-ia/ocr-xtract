@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     train_input = os.path.join(sys.argv[1], "train.csv")
     test_input = os.path.join(sys.argv[1], "test.csv")
-    data_output = os.path.join(sys.argv[2], "data")
+    data_output = os.path.join(sys.argv[2], "data.pickle")
 
     os.makedirs(os.path.join(sys.argv[2]), exist_ok=True)
 

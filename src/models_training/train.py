@@ -55,7 +55,7 @@ if __name__ == "__main__":
         sys.stderr.write("\tpython train.py features-dir-path scheme-name model-dir-path\n")
         sys.exit(1)
 
-    train_input = os.path.join(sys.argv[1], "data")
+    train_input = os.path.join(sys.argv[1], "data.pickle")
     scheme_file = os.path.join('schemes', sys.argv[2])
 
     os.makedirs(os.path.join(sys.argv[3]), exist_ok=True)
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     n_cv = 3  # cross validation for optimization
     n_points = max(n_cpu // n_cv, 1)
     for candidate, candidate_name in zip(scheme.values(), scheme.keys()):
-        model_output = os.path.join(sys.argv[3], sys.argv[2].split('.')[0] + '_' + candidate_name + '_' + "model")
+        model_output = os.path.join(sys.argv[3], candidate_name + '_' + "optimized_GB")
         model = {}
         model['pipe_feature_post'], \
         model['model'] = train_optimized_model(candidate,
