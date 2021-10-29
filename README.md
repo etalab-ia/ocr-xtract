@@ -10,7 +10,7 @@ Other Lab IA projects can be found at the [main GitHub repo](https://github.com/
 ## OCR Xtract
 OCR-Xtract is a tool to extract information from administrative documents. It is meant to ease the work of state agents willing to validate administrative dossiers. OCR_Xtract will consist in :
 - A front-end for uploading files (not included in this repo)
-- An API to access the extracting logic
+- An API to access the trained model for the Key Information Extraction
 - The code to extract the information from the scanned images. 
 
 ### Methods Used
@@ -20,62 +20,56 @@ OCR-Xtract is a tool to extract information from administrative documents. It is
 * Python
 
 ## Project Description 
-For now, only a POC is avaible for extracting information for French DNI 
+For now, only a POC is available for extracting information for French DNI and for the french paychecks 
 
 ## Getting Started for development
 * Fork this repo 
 * Install requirements : `pip install -r requirements.txt`
 
+### Install Doctr
 Since we use [doctr](https://mindee.github.io/doctr/), you will need extra dependencies.
-### For MacOS users
+We also use `pdf2image`, so you will have to install poppler. 
+
+#### For MacOS users
 You can install them as follows:
 ```shell
 brew install cairo pango gdk-pixbuf libffi
 ```
-### For Windows users
-Those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
-
-We also use `pdf2image`. For installing the requirements  are to install `poppler`
-
-### Linux
-If you experience trouble with Weasyprint and pango, install with this
-```apt install python3-pip python3-cffi python3-brotli libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0```
-
-### Windows
-Windows users will have to build or download poppler for Windows. I recommend [@oschwartz10612 version](https://github.com/oschwartz10612/poppler-windows/releases/) which is the most up-to-date. You will then have to add the `bin/` folder to [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) or use `poppler_path = r"C:\path\to\poppler-xx\bin" as an argument` in `convert_from_path`.
-
-### Mac
 Mac users will have to install [poppler for Mac](http://macappstore.org/poppler/).
 
-### Linux
+#### For Windows users
+Those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
+Windows users will have to build or download poppler for Windows. I recommend [@oschwartz10612 version](https://github.com/oschwartz10612/poppler-windows/releases/) which is the most up-to-date. You will then have to add the `bin/` folder to [PATH](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) or use `poppler_path = r"C:\path\to\poppler-xx\bin" as an argument` in `convert_from_path`.
+
+#### Linux
+If you experience trouble with Weasyprint and pango, install with this
+```apt install python3-pip python3-cffi python3-brotli libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0```
 Most distros ship with `pdftoppm` and `pdftocairo`. If they are not installed, refer to your package manager to install `poppler-utils`
 
-## How to extract information 
-### CNI
-Using the reference CNI in `/tutorials/model_CNI.png` and point to it when creating a `RectoCNI` class :
-```Python
-from src.image.image import RectoCNI
-image = RectoCNI('data\CNI_caro2.jpg', reference_path='data/reference.png')
-image.extract_information()
+### Install DVC (Optional)
+To have access to the datasets on which the models are trained, install dvc and connect to our s3 bucket.
+
+```shell
+dvc init
+dvc remote add -d minio s3://labia/PATH/TO/STORE -f --local
+dvc remote modify minio endpointurl https://our.endpoint.fr 
+dvc remote modify minio access_key_id ourkey
+dvc remote modify minio secret_access_key ourpassword
+dvc pull
 ```
 
-### Using app (dev)
-Launch APP using
-```
-streamlit run app_local.py
-```
+### Install ML Flow (Optional)
+To be able to upload the results of the training to the MlFlow you need to set up a `.env` file as described in the `.env.template` with your credentials.
+Also you need to set up a config file in your `~/.ssh` folder as follow : 
 
-You can launch the app via the Dockerfile
 ```
-docker build . -t ocr_xtract:latest
-docker run -p 8501:8501 ocr_xtract:latest
+Host https://mlflow.endpoint
+  HostName https://mlflow.endpoint
+  User someusername
+  IdentityFile path/to/your/private_key
 ```
+You must add the public key in `~/.ssh/authorized_keys` of the mlflow endpoint serveur. 
 
-### Training the models with Auto-sklearn
-If you want to train the models with auto-sklearn, best is to use the Dockerfile_train or install requirement_train.txt
-```
-docker build . -f Dockerfile_train -t ocr_xtract:train
-```
 
 ## How to perform the annotation
 ### CNI 

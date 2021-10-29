@@ -10,14 +10,14 @@ stages:
     outs:
     -  data/salary_for_training/prepared
   featurize_fdp:
-    cmd: python -m src.models_training.featurization data/salary_for_training/prepared  data/salary_for_training/features
+    cmd: python -m src.models_training.featurization data/salary_for_training/prepared  data/salary_for_training/features featurize_fdp
     deps:
       - data/salary_for_training/prepared
       - src/augmentation
       - src/preprocessing
       - src/models_training/featurization.py
     params:
-      - featurize.data_augmentation
+      - featurize_fdp.data_augmentation
     outs:
       - data/salary_for_training/features
   train_fpd:
@@ -41,4 +41,45 @@ stages:
       - data/salary_for_training/features
       - src/models_training/utils.py
       - src/models_training/eval.py
-
+  prepare_cni:
+    cmd: python -m src.models_training.prepare data/cni_recto_csv_for_training/full_data_set.csv  data/cni_recto_csv_for_training/prepared
+    deps:
+    - data/cni_recto_csv_for_training/full_data_set.csv
+    - src/models_training/prepare.py
+    params:
+    - prepare.seed
+    - prepare.train_split
+    outs:
+    - data/cni_recto_csv_for_training/prepared
+  featurize_cni:
+    cmd: python -m src.models_training.featurization data/cni_recto_csv_for_training/prepared  data/cni_recto_csv_for_training/features featurize_cni
+    deps:
+      - data/cni_recto_csv_for_training/prepared
+      - src/augmentation
+      - src/preprocessing
+      - src/models_training/featurization.py
+    params:
+      - featurize_cni.data_augmentation
+    outs:
+      - data/cni_recto_csv_for_training/features
+  train_cni:
+    cmd: python -m src.models_training.train data/cni_recto_csv_for_training/features cni.json model/cni
+    deps:
+      - schemes/cni.json
+      - data/cni_recto_csv_for_training/features
+      - src/models_training/utils.py
+      - src/models_training/train.py
+    params:
+      - train.optimize
+      - train.n_iter
+      - train.n_estimators
+    outs:
+      - model/cni
+  eval_cni:
+    cmd: python -m src.models_training.eval data/cni_recto_csv_for_training/features cni.json model/cni
+    deps:
+      - schemes/cni.json
+      - model/cni
+      - data/cni_recto_csv_for_training/features
+      - src/models_training/utils.py
+      - src/models_training/eval.py

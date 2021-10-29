@@ -2,8 +2,11 @@ prepare:
   train_split: 0.80
   seed: 20170428
 
-featurize:
+featurize_fdp:
   data_augmentation: True
+
+featurize_cni:
+  data_augmentation: False
 
 train:
   optimize: True

@@ -11,16 +11,16 @@ from src.preprocessing.word_transformers import ContainsDigit, IsPrenom, IsNom, 
 
 
 if __name__ == "__main__":
-    params = yaml.safe_load(open("params.yaml"))["featurize"]
 
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         sys.stderr.write("Arguments error. Usage:\n")
-        sys.stderr.write("\tpython featurization.py data-dir-path features-dir-path\n")
+        sys.stderr.write("\tpython featurization.py data-dir-path features-dir-path param_name\n")
         sys.exit(1)
 
     train_input = os.path.join(sys.argv[1], "train.csv")
     test_input = os.path.join(sys.argv[1], "test.csv")
     data_output = os.path.join(sys.argv[2], "data.pickle")
+    params = yaml.safe_load(open("params.yaml"))[sys.argv[3]]
 
     os.makedirs(os.path.join(sys.argv[2]), exist_ok=True)
 
@@ -42,13 +42,13 @@ if __name__ == "__main__":
                     'madame', 'm.', 'mme.', 'du', 'au']
 
     pipe_feature = FeatureUnion([('window_transformer', WindowTransformerList(searched_words=search_words)),
-                                ('bag_of_words', BagOfWordInLine(searched_words=search_words)),
-                                ('is_date', IsDate()),
-                                ("position", BoxPositionGetter()),
-                                ('is_digit', ContainsDigit()),
-                                ('is_nom', IsNom()),
-                                ('is_prenom', IsPrenom()),
-                                ])
+                                 ('bag_of_words', BagOfWordInLine(searched_words=search_words)),
+                                 ('is_date', IsDate()),
+                                 ("position", BoxPositionGetter()),
+                                 ('is_digit', ContainsDigit()),
+                                 ('is_nom', IsNom()),
+                                 ('is_prenom', IsPrenom()),
+                                 ])
 
     X_train = pipe_feature.fit_transform(X_train)
     X_test = pipe_feature.transform(X_test)
