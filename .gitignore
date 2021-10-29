@@ -141,8 +141,11 @@ dmypy.json
 .pytype/
 .idea/
 data/
+!data/*.dvc
+!data/*/*.dvc
 data_xp/
 model/
 *annot*
 poppler*
-
+src/models_training/mlruns/
+mlruns/
