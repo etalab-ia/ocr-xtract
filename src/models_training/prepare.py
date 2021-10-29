@@ -16,6 +16,7 @@ if __name__ == "__main__":
     # Train data set split ratio
     split = params["train_split"]
     random.seed(params["seed"])
+    debug = params["debug"]
 
     input = sys.argv[1]
     output = sys.argv[2]
@@ -32,8 +33,13 @@ if __name__ == "__main__":
     list_pages = df['doc_pages'].unique()
     random.shuffle(list_pages)
     nb_train = int(len(list_pages) * split)
-    list_pages_train = list_pages[:nb_train]
-    list_pages_test = list_pages[nb_train:]
+    if debug:
+        # takes very few documents
+        list_pages_train = list_pages[:10]
+        list_pages_test = list_pages[10:15]
+    else:
+        list_pages_train = list_pages[:nb_train]
+        list_pages_test = list_pages[nb_train:]
     df_train = df[df['doc_pages'].isin(list_pages_train)]
     df_test = df[df['doc_pages'].isin(list_pages_test)]
 

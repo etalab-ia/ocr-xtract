@@ -7,6 +7,7 @@ stages:
     params:
     - prepare.seed
     - prepare.train_split
+    - prepare.debug
     outs:
     -  data/salary_for_training/prepared
   featurize_fdp:
@@ -20,7 +21,7 @@ stages:
       - featurize_fdp.data_augmentation
     outs:
       - data/salary_for_training/features
-  train_fpd:
+  train_fdp:
     cmd: python -m src.models_training.train data/salary_for_training/features fdp.json model/fdp
     deps:
       - schemes/fdp.json
@@ -49,6 +50,7 @@ stages:
     params:
     - prepare.seed
     - prepare.train_split
+    - prepare.debug
     outs:
     - data/cni_recto_csv_for_training/prepared
   featurize_cni:

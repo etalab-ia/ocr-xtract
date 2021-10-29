@@ -141,10 +141,14 @@ dmypy.json
 .pytype/
 .idea/
 data/
+# add .dvc to git
 !data/*.dvc
 !data/*/*.dvc
 data_xp/
 model/
+# add .dvc to git
+!model/*.dvc
+!model/*/*.dvc
 *annot*
 poppler*
 src/models_training/mlruns/
