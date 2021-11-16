@@ -82,12 +82,11 @@ You must add the public key in `~/.ssh/authorized_keys` of the mlflow endpoint s
    It will also mount the folder label_studio_files where you have put the images to be annotated inside label-studio
 ```
 docker run -it -p 8080:8080 -v `pwd`/data/label-studio:/label-studio/data \
---env LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true \ 
---env LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files \ 
+--env-file .env
 -v `pwd`/data/label_studio_files:/label-studio/files \
 heartexlabs/label-studio:latest
 
-docker run -it -p 8080:8080 -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\data\label-studio:/label-studio/data --env LABEL_STUDIO_LOCAL_FILES_SERVING_ENABLED=true --env LABEL_STUDIO_LOCAL_FILES_DOCUMENT_ROOT=/label-studio/files -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\data\label_studio_files:/label-studio/files heartexlabs/label-studio:latest
+docker run -it -p 8080:8080 -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\data\label-studio:/label-studio/data --env-file .env -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\data\label_studio_files:/label-studio/files heartexlabs/label-studio:latest
 ```
 
 5. Create an annotation project :
