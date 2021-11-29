@@ -35,3 +35,10 @@ class tqdm_skopt(object):
 
     def __call__(self, res):
         self._bar.update()
+
+    def __getstate__(self):
+        # don't save away the temporary pbar_ object which gets created on
+        # epoch begin anew anyway. This avoids pickling errors with tqdm.
+        state = self.__dict__.copy()
+        del state['_bar']
+        return state

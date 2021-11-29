@@ -1,7 +1,7 @@
 prepare:
   train_split: 0.80
-  seed: 20170428
-  debug: True
+  seed: 42
+  debug: False
 
 featurize_fdp:
   data_augmentation: True
@@ -11,7 +11,7 @@ featurize_cni:
 
 train:
   optimize: True
-  n_iter: 1
-  n_estimators: 3
+  n_iter: 100
+  n_estimators: 200
 
 eval:

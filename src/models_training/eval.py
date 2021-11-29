@@ -56,9 +56,10 @@ if __name__ == "__main__":
     list_model = os.listdir(model_folder)
 
     for candidate_name in scheme.keys():
+        print(candidate_name)
         candidate_feature = scheme[candidate_name]['candidate']
 
-        list_model_candidate = [m for m in list_model if candidate_name == m.split('_')[0]]
+        list_model_candidate = [m for m in list_model if candidate_name == m.split('-')[0]]
 
         expe = scheme_name + '_' + candidate_name
         mlflow.set_experiment(experiment_name=expe)
@@ -76,6 +77,7 @@ if __name__ == "__main__":
             y_pred = model.predict(X)
 
             f1 = f1_score(y, y_pred)
+            print(f1)
 
             run = client.create_run(experiment.experiment_id)
             client.log_param(run.info.run_id, 'model', model_name)

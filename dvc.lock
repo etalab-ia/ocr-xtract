@@ -22,47 +22,47 @@ stages:
     cmd: python -m src.models_training.prepare data/salary_for_training/full_data_set.csv  data/salary_for_training/prepared
     deps:
     - path: data/salary_for_training/full_data_set.csv
-      md5: b9b46fd7f5c47c0dc351b4eee2346f83
+      md5: 0256f85148aac849c82dd349b7df2633
       size: 9510913
     - path: src/models_training/prepare.py
       md5: 0b4e07f1f2cfbea12ca3e9a134dde033
       size: 1546
     params:
       params.yaml:
-        prepare.debug: true
-        prepare.seed: 20170428
+        prepare.debug: false
+        prepare.seed: 42
         prepare.train_split: 0.8
     outs:
     - path: data/salary_for_training/prepared
-      md5: e10e6d5561093036c28a22799231c11e.dir
-      size: 987306
+      md5: 0f277dae0ad4ed4253b4681ebe23331f.dir
+      size: 12492943
       nfiles: 2
   featurize_fdp:
     cmd: python -m src.models_training.featurization data/salary_for_training/prepared  data/salary_for_training/features
       featurize_fdp
     deps:
     - path: data/salary_for_training/prepared
-      md5: e10e6d5561093036c28a22799231c11e.dir
-      size: 987306
+      md5: 0f277dae0ad4ed4253b4681ebe23331f.dir
+      size: 12492943
       nfiles: 2
     - path: src/augmentation
-      md5: 86206cd2f1b3a679f8b150a1e4a99639.dir
-      size: 13162
+      md5: 4e08bb479376d4295b805525150f527a.dir
+      size: 13211
       nfiles: 7
     - path: src/models_training/featurization.py
       md5: 6df0fe5939c295456f7bda0233abe9bf
       size: 2471
     - path: src/preprocessing
-      md5: d7c0060911ebfef7bae2d9312eac9444.dir
-      size: 3548570
+      md5: 77cdd451a695cc46f208594e4f707630.dir
+      size: 3548858
       nfiles: 14
     params:
       params.yaml:
         featurize_fdp.data_augmentation: true
     outs:
     - path: data/salary_for_training/features
-      md5: 44eb4343ca7f516fd01f1c2fec3c05a1.dir
-      size: 116156372
+      md5: 7bd8d011cb808c74215c2d37dc0fcfe8.dir
+      size: 1124750667
       nfiles: 1
   train_fpd:
     cmd: python -m src.models_training.train data/salary_for_training/features fdp.json
@@ -99,40 +99,40 @@ stages:
       size: 1546
     params:
       params.yaml:
-        prepare.debug: true
-        prepare.seed: 20170428
+        prepare.debug: false
+        prepare.seed: 42
         prepare.train_split: 0.8
     outs:
     - path: data/cni_recto_csv_for_training/prepared
-      md5: 6618e39760071c67522b2bf25d149403.dir
-      size: 98539
+      md5: 23c0ff7c84a61bc02574446ed5353611.dir
+      size: 1876489
       nfiles: 2
   featurize_cni:
     cmd: python -m src.models_training.featurization data/cni_recto_csv_for_training/prepared  data/cni_recto_csv_for_training/features
       featurize_cni
     deps:
     - path: data/cni_recto_csv_for_training/prepared
-      md5: 6618e39760071c67522b2bf25d149403.dir
-      size: 98539
+      md5: 23c0ff7c84a61bc02574446ed5353611.dir
+      size: 1876489
       nfiles: 2
     - path: src/augmentation
-      md5: 86206cd2f1b3a679f8b150a1e4a99639.dir
-      size: 13162
+      md5: 4e08bb479376d4295b805525150f527a.dir
+      size: 13211
       nfiles: 7
     - path: src/models_training/featurization.py
       md5: 6df0fe5939c295456f7bda0233abe9bf
       size: 2471
     - path: src/preprocessing
-      md5: d7c0060911ebfef7bae2d9312eac9444.dir
-      size: 3548570
+      md5: 77cdd451a695cc46f208594e4f707630.dir
+      size: 3548858
       nfiles: 14
     params:
       params.yaml:
         featurize_cni.data_augmentation: false
     outs:
     - path: data/cni_recto_csv_for_training/features
-      md5: 0c534d061027730a913b6bcec7086bff.dir
-      size: 3535107
+      md5: 34cc9d6f4b358f773724397b63f09acb.dir
+      size: 11103769
       nfiles: 1
   train_fdp:
     cmd: python -m src.models_training.train data/salary_for_training/features fdp.json
