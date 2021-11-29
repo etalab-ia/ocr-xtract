@@ -14,8 +14,8 @@ pip-chill==1.0.1
 pysftp
 pytest
 pytesseract==0.3.7
--e git://github.com/etalab-ia/doctr#egg=doctr
-scikit-optimize==0.8.1
+python-doctr==0.4.1
+scikit-optimize==0.9
 scikit-learn==0.23.2
 sip==6.1.1
 stop-words==2018.7.23
@@ -24,7 +24,7 @@ tensorflow>=2.4.0
 tensorflow-addons>=0.13.0
 wincertstore==0.2
 numpy>=1.16.0
-scipy>=1.4.0
+scipy==1.5.3
 spacy
 jenkspy
 memory_profiler

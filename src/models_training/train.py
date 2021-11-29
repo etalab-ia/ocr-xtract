@@ -41,7 +41,7 @@ def train_optimized_model(candidate, data, n_cv=3, n_points=1, n_iter=100, n_est
         verbose=0,
         scoring='f1_macro',
     )
-    pipe.fit(X_train, y_train, callback=[tqdm_skopt(total=n_iter, desc=candidate_name)])
+    pipe.fit(X_train, y_train, callback=[tqdm_skopt(total=int(n_iter/(n_cv*n_points)), desc=candidate_name)])
 
     print("val. score: %s" % pipe.best_score_)
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     n_cv = 3  # cross validation for optimization
     n_points = max(n_cpu // n_cv, 1)
     for candidate, candidate_name in zip(scheme.values(), scheme.keys()):
-        model_output = os.path.join(sys.argv[3], candidate_name + '_' + "optimized_GB")
+        model_output = os.path.join(sys.argv[3], candidate_name + '-' + "optimized_GB")
         model = {}
         model['pipe_feature_post'], \
         model['model'] = train_optimized_model(candidate,
