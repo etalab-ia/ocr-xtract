@@ -14,7 +14,7 @@ pip-chill==1.0.1
 pysftp
 pytest
 pytesseract==0.3.7
--e git://github.com/etalab-ia/doctr#egg=doctr
+python-doctr
 scikit-optimize==0.8.1
 scikit-learn==0.23.2
 sip==6.1.1
