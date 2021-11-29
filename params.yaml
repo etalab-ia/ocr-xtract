@@ -12,6 +12,6 @@ featurize_cni:
 train:
   optimize: True
   n_iter: 10
-  n_estimators: 20
+  n_estimators: 10
 
 eval:
