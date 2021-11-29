@@ -23,7 +23,8 @@ OCR-Xtract is a tool to extract information from administrative documents. It is
 For now, only a POC is available for extracting information for French DNI and for the french paychecks 
 
 ## Getting Started for development
-* Fork this repo 
+* Fork this repo
+* Update pip : `pip install --upgrade pip`
 * Install requirements : `pip install -r requirements.txt`
 
 ### Install Doctr
@@ -50,11 +51,10 @@ Most distros ship with `pdftoppm` and `pdftocairo`. If they are not installed, r
 To have access to the datasets on which the models are trained, install dvc and connect to our s3 bucket.
 
 ```shell
-dvc init
 dvc remote add -d minio s3://labia/PATH/TO/STORE -f --local
-dvc remote modify minio endpointurl https://our.endpoint.fr 
-dvc remote modify minio access_key_id ourkey
-dvc remote modify minio secret_access_key ourpassword
+dvc remote modify minio endpointurl https://our.endpoint.fr --local
+dvc remote modify minio access_key_id ourkey --local
+dvc remote modify minio secret_access_key ourpassword --local
 dvc pull
 ```
 
