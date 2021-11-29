@@ -1,6 +1,7 @@
 import sys
 import os
 import yaml
+from dotenv import load_dotenv
 
 import pandas as pd
 from sklearn.pipeline import FeatureUnion
@@ -9,6 +10,7 @@ from src.augmentation.augmentation import AugmentDocuments
 from src.preprocessing.xtract_vectorizer import WindowTransformerList, BoxPositionGetter, BagOfWordInLine
 from src.preprocessing.word_transformers import ContainsDigit, IsPrenom, IsNom, IsDate
 
+load_dotenv()
 
 if __name__ == "__main__":
 
@@ -21,6 +23,8 @@ if __name__ == "__main__":
     test_input = os.path.join(sys.argv[1], "test.csv")
     data_output = os.path.join(sys.argv[2], "data.pickle")
     params = yaml.safe_load(open("params.yaml"))[sys.argv[3]]
+
+    n_jobs = int(os.getenv("NB_CPU"))
 
     os.makedirs(os.path.join(sys.argv[2]), exist_ok=True)
 
@@ -41,13 +45,15 @@ if __name__ == "__main__":
     search_words = ['salaire', 'net', 'impots', 'periode', 'revenu', 'avant', 'sarl', 'sas', 'rue', 'monsieur',
                     'madame', 'm.', 'mme.', 'du', 'au']
 
-    pipe_feature = FeatureUnion([('window_transformer', WindowTransformerList(searched_words=search_words)),
-                                 ('bag_of_words', BagOfWordInLine(searched_words=search_words)),
-                                 ('is_date', IsDate()),
+    pipe_feature = FeatureUnion([('window_transformer', WindowTransformerList(searched_words=search_words,
+                                                                              n_jobs=n_jobs)),
+                                 ('bag_of_words', BagOfWordInLine(searched_words=search_words,
+                                                                  n_jobs=n_jobs)),
+                                 ('is_date', IsDate(n_jobs=n_jobs)),
                                  ("position", BoxPositionGetter()),
-                                 ('is_digit', ContainsDigit()),
-                                 ('is_nom', IsNom()),
-                                 ('is_prenom', IsPrenom()),
+                                 ('is_digit', ContainsDigit(n_jobs=n_jobs)),
+                                 ('is_nom', IsNom(n_jobs=n_jobs)),
+                                 ('is_prenom', IsPrenom(n_jobs=n_jobs)),
                                  ])
 
     X_train = pipe_feature.fit_transform(X_train)
