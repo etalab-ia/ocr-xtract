@@ -90,7 +90,7 @@ class XtractVectorizer(DictVectorizer):
                 self.stop_words.remove(word)
             except:
                 pass
-        self.n_jobs = n_jobs
+        self.n_jobs = mp.cpu_count() if n_jobs == -1 else min(n_jobs, mp.cpu_count())
         self.min_df = min_df
         self._list_words_in_page = []
 
@@ -172,7 +172,7 @@ class WindowTransformerList(XtractVectorizer):
         print(f"Transforming {self.__class__.__name__}")
         print(f"vocab that will be used for transform {self.vocab}")
         if len(X['document_name'].unique()) > 1: #this is for training or testing
-            nb_cpu = mp.cpu_count()
+            nb_cpu = self.n_jobs
         else: #this is for the inference
             nb_cpu = 1 #limit the number of cpu to 1 to avoid memory issues in production
         print(f'Number of CPU used by {self.__class__.__name__}: {nb_cpu}')

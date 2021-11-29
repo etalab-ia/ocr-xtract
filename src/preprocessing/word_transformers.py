@@ -12,6 +12,9 @@ from tqdm import tqdm
 
 
 class ParallelWordTransformer(TransformerMixin, BaseEstimator):
+    def __init__(self, n_jobs):
+        self.n_jobs = mp.cpu_count() if n_jobs == -1 else min(n_jobs, mp.cpu_count())
+
     def fit(self, X, y=None):
         return self
 
@@ -32,7 +35,7 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
         # pandarallel.initialize(progress_bar=True)
         print(f"Transforming with {self.__class__.__name__}")
         if len(X['document_name'].unique()) > 1: #this is for training or testing
-            nb_cpu = mp.cpu_count()
+            nb_cpu = self.n_jobs
         else: #this is for the inference
             nb_cpu = 1 #limit the number of cpu to 1 to avoid memory issues in production
         print(f'Number of CPU used by {self.__class__.__name__}: {nb_cpu}')
@@ -63,8 +66,8 @@ class IsPrenom(ParallelWordTransformer):
     Check if a string is a prenom. The list of prenom is the french prenom from INSEE dataset
     """
     # TODO : is Nom Is Prenom should
-    def __init__(self):
-        super().__init__()
+    def __init__(self, n_jobs):
+        super().__init__(n_jobs)
         with open('src/preprocessing/prenoms.txt', 'r', encoding='UTf_8') as f:
             self.prenom_dict = {line.lower().split(',')[0]: int(line.lower().split(',')[1].strip()) for line in
                            f.readlines()}
@@ -83,8 +86,8 @@ class IsNom (ParallelWordTransformer):
     Check if a string is a nom. The list of nom is the french nom from INSEE dataset
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, n_jobs):
+        super().__init__(n_jobs)
         with open('src/preprocessing/noms.txt', 'r') as f:
             self.nom_dict = {line.lower().split(',')[0]: int(line.lower().split(',')[1].strip()) for line in
                            f.readlines()}
