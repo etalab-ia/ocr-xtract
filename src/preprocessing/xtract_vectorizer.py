@@ -55,7 +55,7 @@ def get_optimal_nb_classes(y):
 
 
 class XtractVectorizer(DictVectorizer):
-    """ This call is used for vectorizing text extracting from DocTr
+    """ This call is used for vectorizing text extracted from DocTr
 
     Parameters
     ----------
@@ -82,7 +82,7 @@ class XtractVectorizer(DictVectorizer):
         self.searched_words = searched_words
         not_stop_words = ['ne','le','nom','nommé','nommée','nommés','du','au']
         not_stop_words.extend(searched_words)
-        additional_stop_word = ['nan','ca', 'debut', 'du', 'etaient', 'etais', 'etait', 'etant', 'etat', 'ete', 'etes', 'etiez', 'etions', 'etre', 'eumes', 'eutes', 'fumes', 'futes', 'meme', 'tres']
+        additional_stop_word = ['nan','ca', 'debut', 'etaient', 'etais', 'etait', 'etant', 'etat', 'ete', 'etes', 'etiez', 'etions', 'etre', 'eumes', 'eutes', 'fumes', 'futes', 'meme', 'tres']
         self.stop_words = get_stop_words('french').copy()
         self.stop_words.extend(additional_stop_word)
         for word in not_stop_words:
