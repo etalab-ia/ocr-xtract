@@ -24,7 +24,7 @@ tensorflow>=2.4.0
 tensorflow-addons>=0.13.0
 wincertstore==0.2
 numpy>=1.16.0
-scipy==1.5.3
+scipy>=1.4.0
 spacy
 jenkspy
 memory_profiler
