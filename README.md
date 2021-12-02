@@ -3,12 +3,13 @@ OCR_XTRACT
 ![LOGO](.github/reading_snake.jpg)
 
 This project is conducted by the [Lab IA](https://www.etalab.gouv.fr/datasciences-et-intelligence-artificielle) at [Etalab](https://www.etalab.gouv.fr/).  
-The aim of the Lab IA is to help the french administration to modernize its services by the use of modern AI techniques.  
-Other Lab IA projects can be found at the [main GitHub repo](https://github.com/etalab-ia/). 
+The Lab IA helps french administrations to modernize their services by the use of modern AI techniques.  
+Other Lab IA projects can be found on our [GitHub organization](https://github.com/etalab-ia/). 
+
 #### -- Project Status: [Active]
 
 ## OCR Xtract
-OCR-Xtract is a tool to extract information from administrative documents. It is meant to ease the work of state agents willing to validate administrative dossiers. OCR_Xtract will consist in :
+OCR-Xtract is a tool that performs OCR and information extraction from . It is meant to ease the work of state agents willing to validate administrative dossiers. OCR_Xtract will consist in :
 - A front-end for uploading files (not included in this repo)
 - An API to access the trained model for the Key Information Extraction
 - The code to extract the information from the scanned images. 
