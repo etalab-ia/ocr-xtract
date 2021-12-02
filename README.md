@@ -3,19 +3,22 @@ OCR_XTRACT
 ![LOGO](.github/reading_snake.jpg)
 
 This project is conducted by the [Lab IA](https://www.etalab.gouv.fr/datasciences-et-intelligence-artificielle) at [Etalab](https://www.etalab.gouv.fr/).  
-The aim of the Lab IA is to help the french administration to modernize its services by the use of modern AI techniques.  
-Other Lab IA projects can be found at the [main GitHub repo](https://github.com/etalab-ia/). 
+The Lab IA helps french administrations to modernize their services by the use of modern AI techniques.  
+Other Lab IA projects can be found on our [GitHub organization](https://github.com/etalab-ia/). 
+
 #### -- Project Status: [Active]
 
 ## OCR Xtract
-OCR-Xtract is a tool to extract information from administrative documents. It is meant to ease the work of state agents willing to validate administrative dossiers. OCR_Xtract will consist in :
-- A front-end for uploading files (not included in this repo)
+OCR-Xtract is a tool that performs OCR and information extraction from documents. It is meant to speed up the work of state agents dealing with documents whose formats are not directly numerically exploitable. OCR_Xtract will consist in :
+- A front-end for uploading files 
 - An API to access the trained model for the Key Information Extraction
 - The code to extract the information from the scanned images. 
 
 ### Methods Used
 * OCR
 * Image Processing
+
+
 ### Technologies 
 * Python
 
@@ -37,6 +40,15 @@ You can install them as follows:
 brew install cairo pango gdk-pixbuf libffi
 ```
 Mac users will have to install [poppler for Mac](http://macappstore.org/poppler/).
+Install poppler with the command 
+```shell
+brew install poppler
+``` 
+If this one does not work, an alternative is to use conda : 
+```shell
+conda install -c conda-forge poppler
+``` 
+
 
 #### For Windows users
 Those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
