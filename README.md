@@ -37,6 +37,15 @@ You can install them as follows:
 brew install cairo pango gdk-pixbuf libffi
 ```
 Mac users will have to install [poppler for Mac](http://macappstore.org/poppler/).
+Install poppler with the command 
+```shell
+brew install poppler
+``` 
+If this one does not work, an alternative is to use conda : 
+```shell
+conda install -c conda-forge poppler
+``` 
+
 
 #### For Windows users
 Those dependencies are included in GTK. You can find the latest installer over [here](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases).
