@@ -9,14 +9,16 @@ Other Lab IA projects can be found on our [GitHub organization](https://github.c
 #### -- Project Status: [Active]
 
 ## OCR Xtract
-OCR-Xtract is a tool that performs OCR and information extraction from . It is meant to ease the work of state agents willing to validate administrative dossiers. OCR_Xtract will consist in :
-- A front-end for uploading files (not included in this repo)
+OCR-Xtract is a tool that performs OCR and information extraction from documents. It is meant to speed up the work of state agents dealing with documents whose formats are not directly numerically exploitable. OCR_Xtract will consist in :
+- A front-end for uploading files 
 - An API to access the trained model for the Key Information Extraction
 - The code to extract the information from the scanned images. 
 
 ### Methods Used
 * OCR
 * Image Processing
+
+
 ### Technologies 
 * Python
 
