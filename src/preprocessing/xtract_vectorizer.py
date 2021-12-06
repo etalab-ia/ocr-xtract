@@ -80,8 +80,8 @@ class XtractVectorizer(DictVectorizer):
     def __init__(self, searched_words: List[str] = None, n_jobs: int = -1, min_df: float = 0.2):
         super().__init__(sparse=False)
         self.searched_words = searched_words
-        not_stop_words = ['ne','le','nom','nommé','nommée','nommés','du','au']
-        not_stop_words.extend(searched_words)
+        not_stop_words = set(['ne','le','nom','nommé','nommée','nommés','du','au'])
+        not_stop_words.update(searched_words)
         additional_stop_word = ['nan','ca', 'debut', 'etaient', 'etais', 'etait', 'etant', 'etat', 'ete', 'etes', 'etiez', 'etions', 'etre', 'eumes', 'eutes', 'fumes', 'futes', 'meme', 'tres']
         self.stop_words = get_stop_words('french').copy()
         self.stop_words.extend(additional_stop_word)

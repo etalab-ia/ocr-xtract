@@ -24,14 +24,15 @@ if __name__ == "__main__":
     data_output = os.path.join(sys.argv[2], "data.pickle")
     params = yaml.safe_load(open("params.yaml"))[sys.argv[3]]
 
+    data_augmentation = params['data_augmentation']
+    min_df = params['min_df']
+
     n_jobs = int(os.getenv("NB_CPU"))
 
     os.makedirs(os.path.join(sys.argv[2]), exist_ok=True)
-
     data_train = pd.read_csv(train_input, sep='\t')
     data_test = pd.read_csv(test_input, sep='\t')
 
-    data_augmentation = params['data_augmentation']
     if data_augmentation:
         aug = AugmentDocuments()
         data_train = aug.transform(data_train)
@@ -46,9 +47,11 @@ if __name__ == "__main__":
                     'madame', 'm.', 'mme.', 'du', 'au']
 
     pipe_feature = FeatureUnion([('window_transformer', WindowTransformerList(searched_words=search_words,
-                                                                              n_jobs=n_jobs)),
+                                                                              n_jobs=n_jobs,
+                                                                              min_df=min_df)),
                                  ('bag_of_words', BagOfWordInLine(searched_words=search_words,
-                                                                  n_jobs=n_jobs)),
+                                                                  n_jobs=n_jobs,
+                                                                  min_df=min_df)),
                                  ('is_date', IsDate(n_jobs=n_jobs)),
                                  ("position", BoxPositionGetter()),
                                  ('is_digit', ContainsDigit(n_jobs=n_jobs)),
