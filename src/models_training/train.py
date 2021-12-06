@@ -52,11 +52,11 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 4:
         sys.stderr.write("Arguments error. Usage:\n")
-        sys.stderr.write("\tpython train.py features-dir-path scheme-name model-dir-path\n")
+        sys.stderr.write("\tpython train.py features-dir-path scheme-path model-dir-path\n")
         sys.exit(1)
 
     train_input = os.path.join(sys.argv[1], "data.pickle")
-    scheme_file = os.path.join('schemes', sys.argv[2])
+    scheme_file = sys.argv[2]
 
     os.makedirs(os.path.join(sys.argv[3]), exist_ok=True)
 
