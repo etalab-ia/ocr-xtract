@@ -1,4 +1,4 @@
 outs:
 - md5: 13c424e30841b81c7745436a75440531
   size: 448
-  path: salary.json
+  path: scheme.json
