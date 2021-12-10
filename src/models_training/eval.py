@@ -35,18 +35,18 @@ if __name__ == "__main__":
 
     if len(sys.argv) != 4:
         sys.stderr.write("Arguments error. Usage:\n")
-        sys.stderr.write("\tpython eval.py features-dir-path scheme-name model-dir-path\n")
+        sys.stderr.write("\tpython eval.py features-dir-path scheme-path model-dir-path\n")
         sys.exit(1)
 
     features_folder = os.path.join(sys.argv[1], "data.pickle")
-    scheme_name = sys.argv[2].split('.')[0]
-    scheme_file = os.path.join('schemes', sys.argv[2])
+    scheme_name = sys.argv[2].split('/')[1]
+    scheme_path = sys.argv[2]
     model_folder = os.path.join(sys.argv[3])
 
     # load data and scheme
     with open(features_folder, 'rb') as f1:
         data = load(f1)
-    with open(scheme_file, 'rb') as f_s:
+    with open(scheme_path, 'rb') as f_s:
         scheme = json.load(f_s)
 
     pipe_feature = data['pipe_feature']
