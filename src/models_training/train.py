@@ -63,13 +63,13 @@ if __name__ == "__main__":
     for candidate, candidate_name in zip(scheme.values(), scheme.keys()):
 
         X_train, y_train = prepare_data(candidate, data)
-        pipe_feature_post = Pipeline([
-            ('power_transformer', PowerTransformer()),
-        ])  # TODO : do we really need to do that here ?
-
-        X_train = pipe_feature_post.fit_transform(X_train)
-        model = {}
-        model['pipe_feature_post'] = pipe_feature_post
+        # pipe_feature_post = Pipeline([
+        #     ('power_transformer', PowerTransformer()),
+        # ])
+        #
+        # X_train = pipe_feature_post.fit_transform(X_train)
+        # model = {}
+        # model['pipe_feature_post'] = pipe_feature_post
 
         if optimize:
             model_output = os.path.join(sys.argv[3], candidate_name + '-' + "optimized_GB")
