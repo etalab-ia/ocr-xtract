@@ -22,9 +22,9 @@ stages:
     outs:
       - data_dvc/salary/features
   train_fdp:
-    cmd: python -m src.models_training.train data_dvc/salary/features data_dvc/salary/sheme.json data_dvc/salary/model train_fdp
+    cmd: python -m src.models_training.train data_dvc/salary/features data_dvc/salary/scheme.json data_dvc/salary/model train_fdp
     deps:
-      - data_dvc/salary/sheme.json
+      - data_dvc/salary/scheme.json
       - data_dvc/salary/features
       - src/models_training/utils.py
       - src/models_training/train.py
@@ -35,9 +35,9 @@ stages:
     outs:
       - data_dvc/salary/model
   eval_fdp:
-    cmd: python -m src.models_training.eval data_dvc/salary/features data_dvc/salary/sheme.json data_dvc/salary/model
+    cmd: python -m src.models_training.eval data_dvc/salary/features data_dvc/salary/scheme.json data_dvc/salary/model
     deps:
-      - data_dvc/salary/sheme.json
+      - data_dvc/salary/scheme.json
       - data_dvc/salary/model
       - data_dvc/salary/features
       - src/models_training/utils.py
@@ -65,9 +65,9 @@ stages:
     outs:
       - data_dvc/cni_recto/features
   train_cni:
-    cmd: python -m src.models_training.train data_dvc/cni_recto/features data_dvc/cni_recto/sheme.json data_dvc/cni_recto/model train_cni
+    cmd: python -m src.models_training.train data_dvc/cni_recto/features data_dvc/cni_recto/scheme.json data_dvc/cni_recto/model train_cni
     deps:
-      - data_dvc/cni_recto/sheme.json
+      - data_dvc/cni_recto/scheme.json
       - data_dvc/cni_recto/features
       - src/models_training/utils.py
       - src/models_training/train.py
@@ -78,9 +78,9 @@ stages:
     outs:
       - data_dvc/cni_recto/model
   eval_cni:
-    cmd: python -m src.models_training.eval data_dvc/cni_recto/features data_dvc/cni_recto/sheme.json data_dvc/cni_recto/model
+    cmd: python -m src.models_training.eval data_dvc/cni_recto/features data_dvc/cni_recto/scheme.json data_dvc/cni_recto/model
     deps:
-      - data_dvc/cni_recto/sheme.json
+      - data_dvc/cni_recto/scheme.json
       - data_dvc/cni_recto/model
       - data_dvc/cni_recto/features
       - src/models_training/utils.py
