@@ -69,11 +69,11 @@ if __name__ == "__main__":
             with open(os.path.join(model_folder, model_name), 'rb') as f:
                 model_data = load(f)
 
-            pipe_feature_post = model_data['pipe_feature_post']
+            # pipe_feature_post = model_data['pipe_feature_post']
             model = model_data['model']
 
             X, y = select_candidate(candidate_name, candidate_feature, features, X_test, y_test)
-            X = pipe_feature_post.transform(X)
+            # X = pipe_feature_post.transform(X)
             y_pred = model.predict(X)
 
             f1 = f1_score(y, y_pred)
