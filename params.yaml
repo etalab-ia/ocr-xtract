@@ -12,7 +12,7 @@ featurize_cni:
   min_df: 0.2
 
 train_fdp:
-  optimize: True
+  optimize: False
   n_iter: 50
   n_estimators: 200
   learning_rate: 0.06

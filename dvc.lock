@@ -116,23 +116,23 @@ stages:
       size: 1866627
       nfiles: 2
     - path: src/augmentation
-      md5: 19ad8b9d74d975b123bb3b23ec645830.dir
-      size: 8543
-      nfiles: 5
+      md5: 4e08bb479376d4295b805525150f527a.dir
+      size: 13211
+      nfiles: 7
     - path: src/models_training/featurization.py
-      md5: 8a37aa2f540463abd2a1239d53d8ab26
-      size: 2711
+      md5: f9b2ee409c0e3bd83e78373ba814536e
+      size: 2994
     - path: src/preprocessing
-      md5: 6ed5ba68d506fe447d4b3f7e4975b7e3.dir
-      size: 3281977
-      nfiles: 10
+      md5: 0a19ccd40d76452eafe03faf74314f22.dir
+      size: 3549313
+      nfiles: 14
     params:
       params.yaml:
         featurize_cni.data_augmentation: false
     outs:
     - path: data_dvc/cni_recto/features
-      md5: c1a183d6104453aa43dfaf770f521d8a.dir
-      size: 11103795
+      md5: 3ff1cb99bc826909b866a9b0b9f2b7a6.dir
+      size: 9312534
       nfiles: 1
   train_fdp:
     cmd: python -m src.models_training.train data_dvc/salary/features fdp.json data_dvc/salary/model
