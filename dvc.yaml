@@ -29,9 +29,12 @@ stages:
       - src/models_training/utils.py
       - src/models_training/train.py
     params:
-      - train.optimize
-      - train.n_iter
-      - train.n_estimators
+      - train_fdp.optimize
+      - train_fdp.n_iter
+      - train_fdp.n_estimators
+      - train_fdp.learning_rate
+      - train_fdp.max_depth
+      - train_fdp.max_leaf_nodes
     outs:
       - data_dvc/salary/model
   eval_fdp:
@@ -72,9 +75,12 @@ stages:
       - src/models_training/utils.py
       - src/models_training/train.py
     params:
-      - train.optimize
-      - train.n_iter
-      - train.n_estimators
+      - train_cni.optimize
+      - train_cni.n_iter
+      - train_cni.n_estimators
+      - train_cni.learning_rate
+      - train_cni.max_depth
+      - train_cni.max_leaf_nodes
     outs:
       - data_dvc/cni_recto/model
   eval_cni:
