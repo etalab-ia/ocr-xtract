@@ -197,8 +197,8 @@ stages:
       md5: fc09dc8b7dbce83baa7b9f52718b94e5
       size: 285
     - path: src/models_training/train.py
-      md5: 921b5e9c9366c92f89585ed6c445752d
-      size: 3615
+      md5: 8e7e6c613b864ab16968f6648e9f1515
+      size: 3588
     - path: src/models_training/utils.py
       md5: c61771e89d03f7402af588313fdf93db
       size: 1628
@@ -212,8 +212,8 @@ stages:
         train_cni.optimize: false
     outs:
     - path: data_dvc/cni_recto/model
-      md5: 5331fef7e7731bc80dc158263bf8a779.dir
-      size: 400402
+      md5: 4909f5a1b8efd290f8664031307c3d03.dir
+      size: 392452
       nfiles: 3
   eval_cni:
     cmd: python -m src.models_training.eval data_dvc/cni_recto/features data_dvc/cni_recto/scheme.json
@@ -224,15 +224,15 @@ stages:
       size: 9312534
       nfiles: 1
     - path: data_dvc/cni_recto/model
-      md5: 5331fef7e7731bc80dc158263bf8a779.dir
-      size: 400402
+      md5: 4909f5a1b8efd290f8664031307c3d03.dir
+      size: 392452
       nfiles: 3
     - path: data_dvc/cni_recto/scheme.json
       md5: fc09dc8b7dbce83baa7b9f52718b94e5
       size: 285
     - path: src/models_training/eval.py
-      md5: dca84d11d9e75d2fcefcb97065fe5a02
-      size: 2820
+      md5: 0572bb6e9a22010995972ffcfbcf150b
+      size: 2824
     - path: src/models_training/utils.py
       md5: c61771e89d03f7402af588313fdf93db
       size: 1628
