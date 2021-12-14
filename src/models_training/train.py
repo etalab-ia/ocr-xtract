@@ -3,6 +3,7 @@ import os
 import yaml
 import json
 from pickle import load, dump
+from tqdm import tqdm
 
 from skopt import BayesSearchCV
 from sklearn.ensemble import GradientBoostingClassifier
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     n_cpu = os.cpu_count()
     n_cv = 3  # cross validation for optimization
     n_points = max(n_cpu // n_cv, 1)
-    for candidate, candidate_name in zip(scheme.values(), scheme.keys()):
+    for candidate, candidate_name in tqdm(zip(scheme.values(), scheme.keys())):
 
         X_train, y_train = prepare_data(candidate, data)
         # pipe_feature_post = Pipeline([
@@ -68,7 +69,7 @@ if __name__ == "__main__":
         # ])
         #
         # X_train = pipe_feature_post.fit_transform(X_train)
-        # model = {}
+        model = {}
         # model['pipe_feature_post'] = pipe_feature_post
 
         if optimize:
@@ -87,8 +88,7 @@ if __name__ == "__main__":
                 verbose=0,
                 scoring='f1_macro',
             )
-            pipe.fit(X_train, y_train,
-                     callback=[tqdm_skopt(total=int(n_iter / (n_cv * n_points)), desc=candidate_name)])
+            pipe.fit(X_train, y_train)
 
             print("val. score: %s" % pipe.best_score_)
             model['model'] = pipe
