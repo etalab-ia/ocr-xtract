@@ -70,18 +70,6 @@ dvc remote modify minio secret_access_key ourpassword --local
 dvc pull
 ```
 
-### Install ML Flow (Optional)
-To be able to upload the results of the training to the MlFlow you need to set up a `.env` file as described in the `.env.template` with your credentials.
-Also you need to set up a config file in your `~/.ssh` folder as follow : 
-
-```
-Host https://mlflow.endpoint
-  HostName https://mlflow.endpoint
-  User someusername
-  IdentityFile path/to/your/private_key
-```
-You must add the public key in `~/.ssh/authorized_keys` of the mlflow endpoint serveur. 
-
 
 ## How to perform the annotation
 ### CNI 
