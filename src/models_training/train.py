@@ -96,7 +96,8 @@ if __name__ == "__main__":
         else:
             model_output = os.path.join(sys.argv[3], candidate_name + '-' + "GB")
             gbc = GradientBoostingClassifier(learning_rate=learning_rate, n_estimators=n_estimators,
-                                             max_depth=max_depth, max_leaf_nodes=max_leaf_nodes)
+                                             max_depth=max_depth, max_leaf_nodes=max_leaf_nodes,
+                                             verbose=1)
             gbc.fit(X_train, y_train)
             model['model'] = gbc
 
