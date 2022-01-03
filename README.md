@@ -56,7 +56,7 @@ Windows users will have to build or download poppler for Windows. I recommend [@
 
 #### Linux
 If you experience trouble with Weasyprint and pango, install with this
-```apt install python3-pip python3-cffi python3-brotli libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0```
+```apt install python3-pip python3-cffi python3-brotli libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libgl1-mesa-glx```
 Most distros ship with `pdftoppm` and `pdftocairo`. If they are not installed, refer to your package manager to install `poppler-utils`
 
 ### Install DVC (Optional)
