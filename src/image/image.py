@@ -219,7 +219,7 @@ class Image():
 
         temp_folder = mkdtemp()
         cv2.imwrite(os.path.join(temp_folder, 'temp.jpg'), self.aligned_image)
-        doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))], rotate_document=self.rotate_document)
+        doc = DoctrTransformer().transform([Path(os.path.join(temp_folder, 'temp.jpg'))])
         dataset_creator = AnnotationDatasetCreator()
         X = dataset_creator.transform(doc)
         del doc
