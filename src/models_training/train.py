@@ -13,13 +13,10 @@ from sklearn.pipeline import Pipeline
 from src.models_training.utils import select_candidate, tqdm_skopt
 
 
-def prepare_data(candidate, data):
+def prepare_data(candidate, data, features):
     candidate_name = candidate['training_field']
     candidate_feature = candidate['candidate']
-    pipe_feature = data['pipe_feature']
     X_train, y_train = data['X_train'], data['y_train']
-
-    features = pipe_feature.get_feature_names()
     X_train, y_train = select_candidate(candidate_name, candidate_feature, features, X_train, y_train)
 
     return X_train, y_train
@@ -34,17 +31,21 @@ if __name__ == "__main__":
         sys.exit(1)
 
     train_input = os.path.join(sys.argv[1], "data.pickle")
+    pipe_file = os.path.join(sys.argv[1], "pipe.pickle")
     scheme_file = sys.argv[2]
 
     os.makedirs(os.path.join(sys.argv[3]), exist_ok=True)
 
 
 
-    # load data and scheme
+    # load data scheme and features
     with open(train_input, 'rb') as f1:
         data = load(f1)
     with open(scheme_file, 'rb') as f_s:
         scheme = json.load(f_s)
+    with open(pipe_file, 'rb') as f1:
+        pipe_feature = load(f1)
+    features = pipe_feature.get_feature_names()
 
     params = yaml.safe_load(open("params.yaml"))[sys.argv[4]]
 
@@ -61,9 +62,10 @@ if __name__ == "__main__":
     n_cpu = os.cpu_count()
     n_cv = 3  # cross validation for optimization
     n_points = max(n_cpu // n_cv, 1)
+
     for candidate, candidate_name in tqdm(zip(scheme.values(), scheme.keys())):
 
-        X_train, y_train = prepare_data(candidate, data)
+        X_train, y_train = prepare_data(candidate, data, features)
         # pipe_feature_post = Pipeline([
         #     ('power_transformer', PowerTransformer()),
         # ])
