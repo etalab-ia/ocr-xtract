@@ -4,8 +4,8 @@ from pathlib import Path
 import os
 
 
-img_folder_path = "data/salary/train_kim"
-output_path = "data/salary/train_kim.json"
+img_folder_path = "data/salary/batch2"
+output_path = "data/salary/batch2.json"
 
 
 def main():

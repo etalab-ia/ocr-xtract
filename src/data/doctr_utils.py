@@ -21,11 +21,11 @@ class DoctrTransformer:
     def fit(self):
         return self
 
-    def transform(self, raw_documents, rotate_document: bool= False):
-        doctr_documents = self._get_doctr_docs(raw_documents=raw_documents, rotate_document=rotate_document)
+    def transform(self, raw_documents):
+        doctr_documents = self._get_doctr_docs(raw_documents=raw_documents)
         return doctr_documents
 
-    def _get_doctr_docs(self, raw_documents: List[Path], rotate_document: bool):
+    def _get_doctr_docs(self, raw_documents: List[Path]):
         if not hasattr(self, "doctr_model"):
             self.doctr_model = ocr_predictor(det_arch='db_resnet50', reco_arch='crnn_vgg16_bn', pretrained=True)
         list_doctr_docs = []
@@ -39,7 +39,7 @@ class DoctrTransformer:
                     doc_doctr = DocumentFile.from_pdf(doc)
                 else:
                     doc_doctr = DocumentFile.from_images(doc)
-                res_doctr = self.doctr_model(doc_doctr, rotate_document=rotate_document)
+                res_doctr = self.doctr_model(doc_doctr)
             except Exception as e:
                 print(f"Could not analyze document {doc}. Error: {e}")
             if res_doctr:

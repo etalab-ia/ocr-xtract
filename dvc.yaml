@@ -22,26 +22,32 @@ stages:
     outs:
       - data_dvc/salary/features
   train_fdp:
-    cmd: python -m src.models_training.train data_dvc/salary/features fdp.json data_dvc/salary/model
+    cmd: python -m src.models_training.train data_dvc/salary/features data_dvc/salary/scheme.json data_dvc/salary/model train_fdp
     deps:
-      - schemes/fdp.json
+      - data_dvc/salary/scheme.json
       - data_dvc/salary/features
       - src/models_training/utils.py
       - src/models_training/train.py
     params:
-      - train.optimize
-      - train.n_iter
-      - train.n_estimators
+      - train_fdp.optimize
+      - train_fdp.n_iter
+      - train_fdp.n_estimators
+      - train_fdp.learning_rate
+      - train_fdp.max_depth
+      - train_fdp.max_leaf_nodes
     outs:
       - data_dvc/salary/model
   eval_fdp:
-    cmd: python -m src.models_training.eval data_dvc/salary/features fdp.json data_dvc/salary/model
+    cmd: python -m src.models_training.eval data_dvc/salary/features data_dvc/salary/scheme.json data_dvc/salary/model data_dvc/salary/results
     deps:
-      - schemes/fdp.json
+      - data_dvc/salary/scheme.json
       - data_dvc/salary/model
       - data_dvc/salary/features
       - src/models_training/utils.py
       - src/models_training/eval.py
+    metrics:
+      - data_dvc/salary/results/results.json:
+          cache: false
   prepare_cni:
     cmd: python -m src.models_training.prepare data_dvc/cni_recto/full_data_set.csv  data_dvc/cni_recto/prepared
     deps:
@@ -65,23 +71,29 @@ stages:
     outs:
       - data_dvc/cni_recto/features
   train_cni:
-    cmd: python -m src.models_training.train data_dvc/cni_recto/features cni.json data_dvc/cni_recto/model
+    cmd: python -m src.models_training.train data_dvc/cni_recto/features data_dvc/cni_recto/scheme.json data_dvc/cni_recto/model train_cni
     deps:
-      - schemes/cni.json
+      - data_dvc/cni_recto/scheme.json
       - data_dvc/cni_recto/features
       - src/models_training/utils.py
       - src/models_training/train.py
     params:
-      - train.optimize
-      - train.n_iter
-      - train.n_estimators
+      - train_cni.optimize
+      - train_cni.n_iter
+      - train_cni.n_estimators
+      - train_cni.learning_rate
+      - train_cni.max_depth
+      - train_cni.max_leaf_nodes
     outs:
       - data_dvc/cni_recto/model
   eval_cni:
-    cmd: python -m src.models_training.eval data_dvc/cni_recto/features cni.json data_dvc/cni_recto/model
+    cmd: python -m src.models_training.eval data_dvc/cni_recto/features data_dvc/cni_recto/scheme.json data_dvc/cni_recto/model data_dvc/cni_recto/results
     deps:
-      - schemes/cni.json
+      - data_dvc/cni_recto/scheme.json
       - data_dvc/cni_recto/model
       - data_dvc/cni_recto/features
       - src/models_training/utils.py
       - src/models_training/eval.py
+    metrics:
+      - data_dvc/cni_recto/results/results.json:
+          cache: false
