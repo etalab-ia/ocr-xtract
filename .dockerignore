@@ -144,6 +144,7 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 .idea/
+.vscode/
 data/
 data_xp/
 *annot*
