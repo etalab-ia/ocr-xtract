@@ -30,7 +30,6 @@ if __name__ == "__main__":
     with open(pipe_file, 'rb') as f1:
         pipe_feature = load(f1)
 
-    pipe_feature = data['pipe_feature']
     X_test, y_test = data['X_test'], data['y_test']
     features = pipe_feature.get_feature_names()
 
