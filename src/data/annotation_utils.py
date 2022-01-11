@@ -84,8 +84,9 @@ class LabelStudioConvertor:
                 df_annotations = pd.concat([df_annotations, df2temp])
 
         df_annotations["label"] = df_annotations["value.rectanglelabels"].map(
-            lambda x: x[0] if not pd.isna(x) else 'O')
-
+            lambda x: x[0] if (pd.isna(x)==False and len(x)>0) else 'O')
+        df_annotations["document_class"] = df_annotations["value.choices"].map(
+            lambda x: x[0] if (pd.isna(x) == False and len(x) > 0) else 'O')
         # rename col names
         dict_rename = {'value.x': 'min_x', 'value.y': 'min_y'}
         df_annotations.rename(columns=dict_rename, inplace=True)
@@ -100,6 +101,7 @@ class LabelStudioConvertor:
         # keep only minimal columns
         if all_columns == False:
             minimal_col_list = ['word', 'min_x', 'min_y', 'max_x', 'max_y', 'page_id', 'document_name', 'label',
+                                'document_class',
                                 "completed_by.email",
                                 'original_width', 'original_height']
             df_annotations = df_annotations[minimal_col_list]
