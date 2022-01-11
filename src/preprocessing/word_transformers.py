@@ -3,6 +3,7 @@ import re
 from functools import partial
 from math import ceil
 import unidecode
+import difflib
 
 import dateparser
 import numpy as np
@@ -111,9 +112,8 @@ class IsDate (ParallelWordTransformer):
             if len(re.findall(r"\d", str(x))) > 0:  # check only if there are digits otherwise it takes too long
                 res[j] = True  # dateparser.parse(str(x).lower()) is not None
             else:
-                for month in list_months:
-                    if unidecode.unidecode(str(x).lower()) in month or month in unidecode.unidecode(str(x).lower()):
-                        res[j] = True
-                    else:
-                        res[j] = False
+                if len(difflib.get_close_matches(unidecode.unidecode(str(x).lower()), list_months)) > 0:
+                    res[j] = True
+                else:
+                    res[j] = False
         return res
