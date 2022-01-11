@@ -197,10 +197,13 @@ class Image():
 
             model = model_data['model']
 
-            X = select_candidate(candidate_name, candidate_feature, features, X)
-            X['label'] = model.predict(X)
+            X_candidate, iscandidate = select_candidate(candidate_name, candidate_feature, features, X_feats)
+            X.loc[iscandidate, candidate_name] = model.predict(X_candidate)
 
-            list_words = X[X['label'] == training_field].sort_values(['min_x'])['word'].to_list()
+            # Debug
+            X.loc[:, features] = X_feats
+
+            list_words = X[X[candidate_name] == 1].sort_values(['min_x'])['word'].to_list()
 
             extracted_information[candidate_name]['field'] = list_words
 
@@ -225,7 +228,7 @@ if __name__ == "__main__":
     start = datetime.now()
     print(start)
     # image = RectoCNI('./tutorials/model_CNI.png')
-    image = Image('./data/salary/test/3aa7bf95-ec2f-492e-97fe-abbf7b6f06f6.jpg', 'data_dvc/salary')
+    image = Image('./data/salary/test/3fc1665f-af1b-4ced-9194-19610f1debe4.jpg', 'data_dvc/salary')
     image.align_images()
     response = image.extract_information()
     print(response)
