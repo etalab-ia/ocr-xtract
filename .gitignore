@@ -142,6 +142,7 @@ dmypy.json
 .idea/
 .vscode/
 data/
+data_test/
 # add .dvc to git
 !data/*.dvc
 !data/*/*.dvc

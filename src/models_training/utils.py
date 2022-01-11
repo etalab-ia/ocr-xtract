@@ -10,7 +10,8 @@ def select_candidate(candidate_name, candidate_feature, features, X, y=None):
     :param features: the name of the features
     :param X: the features data
     :param y: the labelled data (optionnal)
-    :return: the features and the labelled data with only the candidates selected
+    :return: the features and the labelled data with only the candidates selected,
+            the list of indexes where the candidates are located
     """
     df = pd.DataFrame(X, columns=features)
     if y is not None:
@@ -19,14 +20,18 @@ def select_candidate(candidate_name, candidate_feature, features, X, y=None):
         df.loc[df['label'] == candidate_name, 'label'] = 1
         # TODO : downsampled negative (max ratio 40 to 1)
     if candidate_feature != 'None':
-        df = df[df[candidate_feature] >= 1]
+        is_candidate = df[candidate_feature] >= 1
+        df = df[is_candidate]
+        is_candidate = is_candidate[is_candidate].index.values
+    else:
+        is_candidate = df.index.values
     if y is not None:
         X = df.drop(columns=['label']).to_numpy()
         y = df['label'].astype(int).to_numpy()
-        return X, y
+        return X, y, is_candidate
     else:
         X = df.to_numpy()
-        return X
+        return X, is_candidate
 
 
 class tqdm_skopt(object):

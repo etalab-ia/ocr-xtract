@@ -52,7 +52,7 @@ if __name__ == "__main__":
             # pipe_feature_post = model_data['pipe_feature_post']
             model = model_data['model']
 
-            X, y = select_candidate(candidate_name, candidate_feature, features, X_test, y_test)
+            X, y, _ = select_candidate(candidate_name, candidate_feature, features, X_test, y_test)
             # X = pipe_feature_post.transform(X)
             y_pred = model.predict(X)
 

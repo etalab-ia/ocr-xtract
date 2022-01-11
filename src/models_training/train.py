@@ -17,7 +17,7 @@ def prepare_data(candidate, data, features):
     candidate_name = candidate['training_field']
     candidate_feature = candidate['candidate']
     X_train, y_train = data['X_train'], data['y_train']
-    X_train, y_train = select_candidate(candidate_name, candidate_feature, features, X_train, y_train)
+    X_train, y_train, _ = select_candidate(candidate_name, candidate_feature, features, X_train, y_train)
 
     return X_train, y_train
 
