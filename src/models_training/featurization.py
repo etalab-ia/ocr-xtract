@@ -22,6 +22,7 @@ if __name__ == "__main__":
     train_input = os.path.join(sys.argv[1], "train.csv")
     test_input = os.path.join(sys.argv[1], "test.csv")
     data_output = os.path.join(sys.argv[2], "data.pickle")
+    pipe_feature_output = os.path.join(sys.argv[2], "pipe.pickle")
     params = yaml.safe_load(open("params.yaml"))[sys.argv[3]]
 
     data_augmentation = params['data_augmentation']
@@ -63,7 +64,6 @@ if __name__ == "__main__":
     X_test = pipe_feature.transform(X_test)
 
     data = {
-        "pipe_feature": pipe_feature,
         "X_train": X_train,
         "y_train": y_train,
         "X_test": X_test,
@@ -73,6 +73,9 @@ if __name__ == "__main__":
     from pickle import dump
     with open(data_output, 'wb') as f1:
         dump(data, f1)
+
+    with open(pipe_feature_output, 'wb') as f2:
+        dump(pipe_feature, f2)
 
 
 

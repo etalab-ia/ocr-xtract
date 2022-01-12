@@ -144,8 +144,9 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 .idea/
+.vscode/
 data/
-data_xp/
+data_dvc/
 *annot*
 poppler*
 

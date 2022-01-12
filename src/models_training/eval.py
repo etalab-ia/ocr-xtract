@@ -15,6 +15,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     features_folder = os.path.join(sys.argv[1], "data.pickle")
+    pipe_file = os.path.join(sys.argv[1], "pipe.pickle")
     scheme_name = sys.argv[2].split('/')[1]
     scheme_path = sys.argv[2]
     model_folder = sys.argv[3]
@@ -26,8 +27,9 @@ if __name__ == "__main__":
         data = load(f1)
     with open(scheme_path, 'rb') as f_s:
         scheme = json.load(f_s)
+    with open(pipe_file, 'rb') as f1:
+        pipe_feature = load(f1)
 
-    pipe_feature = data['pipe_feature']
     X_test, y_test = data['X_test'], data['y_test']
     features = pipe_feature.get_feature_names()
 
@@ -50,7 +52,7 @@ if __name__ == "__main__":
             # pipe_feature_post = model_data['pipe_feature_post']
             model = model_data['model']
 
-            X, y = select_candidate(candidate_name, candidate_feature, features, X_test, y_test)
+            X, y, _ = select_candidate(candidate_name, candidate_feature, features, X_test, y_test)
             # X = pipe_feature_post.transform(X)
             y_pred = model.predict(X)
 
