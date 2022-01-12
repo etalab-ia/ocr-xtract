@@ -140,7 +140,9 @@ dmypy.json
 # pytype static type analyzer
 .pytype/
 .idea/
+.vscode/
 data/
+data_test/
 # add .dvc to git
 !data/*.dvc
 !data/*/*.dvc

@@ -9,8 +9,7 @@ from flask_restful import Api, Resource, reqparse, fields, marshal
 from flask import Flask
 from flask import request, jsonify
 
-from src.image.image import RectoCNI, FeuilleDePaye
-
+from src.image.image import Image
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -48,7 +47,7 @@ class OCRRectoCNI (Resource):
             full_filename = os.path.join(temp_folder, filename)
             file.save(full_filename) #saves file in folder
 
-            image = RectoCNI(full_filename)
+            image = Image(full_filename, 'data_test/cni_recto')
             shutil.rmtree(temp_folder)
 
             image.align_images()
@@ -87,7 +86,7 @@ class OCRFeuilleDePaye (Resource):
             full_filename = os.path.join(temp_folder, filename)
             file.save(full_filename) #saves file in folder
 
-            image = FeuilleDePaye(full_filename)
+            image = Image(full_filename, 'data_test/salary')
             shutil.rmtree(temp_folder)
 
             image.align_images()

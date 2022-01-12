@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import os
 
-OCR_REST_API_URL = os.getenv("OCR_FDP_REST_API_URL")
+OCR_REST_API_URL = "http://192.168.210.70:5000/fdp" #os.getenv("OCR_FDP_REST_API_URL")
 print(OCR_REST_API_URL)
 
 st.title('FeuilledePaye-Xtractor')
@@ -11,6 +11,7 @@ if uploaded_file:
     files = {'file': uploaded_file}
     f = requests.post(OCR_REST_API_URL, files=files)
     # TODO : write proper message when api is down
+    # TODO : use the fields from scheme
     if f:
         response = f.json()
         response = response['result']
