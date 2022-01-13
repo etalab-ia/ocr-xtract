@@ -7,8 +7,7 @@ from tqdm import tqdm
 
 from skopt import BayesSearchCV
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.preprocessing import PowerTransformer
-from sklearn.pipeline import Pipeline
+from xgboost import XGBClassifier
 
 from src.models_training.utils import select_candidate, tqdm_skopt
 
@@ -97,9 +96,8 @@ if __name__ == "__main__":
 
         else:
             model_output = os.path.join(sys.argv[3], candidate_name + '-' + "GB")
-            gbc = GradientBoostingClassifier(learning_rate=learning_rate, n_estimators=n_estimators,
-                                             max_depth=max_depth, max_leaf_nodes=max_leaf_nodes,
-                                             verbose=1)
+            gbc = XGBClassifier(learning_rate=learning_rate, n_estimators=n_estimators,
+                                max_depth=max_depth, verbose=1, n_jobs=n_cpu)
             gbc.fit(X_train, y_train)
             model['model'] = gbc
 
