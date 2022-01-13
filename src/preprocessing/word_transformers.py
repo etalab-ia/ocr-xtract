@@ -5,19 +5,33 @@ from math import ceil
 import unidecode
 import difflib
 
-import dateparser
 import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin, BaseEstimator
+from sklearn.preprocessing import KBinsDiscretizer
 from tqdm import tqdm
 
 
 class ParallelWordTransformer(TransformerMixin, BaseEstimator):
-    def __init__(self, n_jobs):
+    def __init__(self, n_jobs, postprocess=None):
         self.n_jobs = mp.cpu_count() if n_jobs == -1 else min(n_jobs, mp.cpu_count())
+        self.postprocess = postprocess
 
     def fit(self, X, y=None):
         return self
+
+    def fit_transform(self, X, y=None, **fit_params):
+        if y is None:
+            if self.postprocess is not None:
+                X = self.fit(X, **fit_params).transform(X)
+                if self.postprocess == "kbins":
+                    self.postprocesser = KBinsDiscretizer(n_bins=5, strategy='kmeans', encode='ordinal')
+                    return self.postprocesser.fit_transform(X)
+            else:
+                return self.fit(X, **fit_params).transform(X)
+        else:
+            # fit method of arity 2 (supervised transformation)
+            return self.fit(X, y, **fit_params).transform(X)
 
     def func(self, res: np.array, it: int, array):
         return array
@@ -48,6 +62,9 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
                 tqdm(pool.imap(partial(self.fmp, nb_blocks=nb_blocks, x=array), range(nb_blocks)), total=nb_blocks))
         res = np.hstack(arrays)
         res.resize((len(res), 1))
+        if hasattr(self, 'postprocesser'):
+            res = self.postprocesser.transform(res)
+
         print('Done ! ')
         return res
 
@@ -67,8 +84,8 @@ class IsPrenom(ParallelWordTransformer):
     Check if a string is a prenom. The list of prenom is the french prenom from INSEE dataset
     """
     # TODO : is Nom Is Prenom should
-    def __init__(self, n_jobs):
-        super().__init__(n_jobs)
+    def __init__(self, n_jobs, postprocess=None):
+        super().__init__(n_jobs, postprocess)
         with open('src/preprocessing/prenoms.txt', 'r', encoding='UTf_8') as f:
             self.prenom_dict = {line.lower().split(',')[0]: int(line.lower().split(',')[1].strip()) for line in
                            f.readlines()}
@@ -87,8 +104,8 @@ class IsNom (ParallelWordTransformer):
     Check if a string is a nom. The list of nom is the french nom from INSEE dataset
     """
 
-    def __init__(self, n_jobs):
-        super().__init__(n_jobs)
+    def __init__(self, n_jobs, postprocess=None):
+        super().__init__(n_jobs, postprocess)
         with open('src/preprocessing/noms.txt', 'r') as f:
             self.nom_dict = {line.lower().split(',')[0]: int(line.lower().split(',')[1].strip()) for line in
                            f.readlines()}
