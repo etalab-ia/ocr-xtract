@@ -10,10 +10,12 @@ import cv2
 import matplotlib.pyplot as plt
 
 from pathlib import Path
+from jenkspy import JenksNaturalBreaks
 
 import PIL.Image as Image
 
 from src.models_training.utils import select_candidate
+from src.models_training.utils_prepare import get_optimal_nb_classes
 
 Image.MAX_IMAGE_PIXELS = None
 # used to bypass PIL.Image.DecompressionBombError that prevents from opening large files
@@ -174,6 +176,23 @@ class Image():
         del dataset_creator
         shutil.rmtree(temp_folder)
 
+        X['doc_pages'] = X.apply(lambda x: str(x['document_name']) + str(x['page_id']), axis=1)
+
+        # estimate lines in document
+        all_estimated_lines = []
+        for page in X['doc_pages'].unique():
+            df_page = X[X['doc_pages'] == page].copy()
+            y = df_page['max_y'] * 100
+
+            nb_class = get_optimal_nb_classes(y)
+
+            jnb = JenksNaturalBreaks(nb_class=nb_class)
+            jnb.fit(y)
+
+            estimated_lines = jnb.predict(y)
+            all_estimated_lines.extend(estimated_lines)
+
+        X['estimated_line_number'] = all_estimated_lines
 
         X_feats = self.pipe_feature.transform(X)
         features = self.pipe_feature.get_feature_names()
