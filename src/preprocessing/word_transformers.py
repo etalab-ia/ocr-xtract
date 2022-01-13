@@ -30,7 +30,7 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
         return res
 
     def get_feature_names(self):
-        return [self.__class__.__name__]
+        return [self.__class__.__name__, self.__class__.__name__ + 'in_line']
 
     def transform(self, X: pd.DataFrame):
         # pandarallel.initialize(progress_bar=True)
@@ -47,9 +47,18 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
             arrays = list(
                 tqdm(pool.imap(partial(self.fmp, nb_blocks=nb_blocks, x=array), range(nb_blocks)), total=nb_blocks))
         res = np.hstack(arrays)
-        res.resize((len(res), 1))
+
+        df = X.copy()
+        df['res'] = res
+        gb = df.groupby(['doc_pages', 'estimated_line_number'],as_index=False)['res'].sum()
+        output = pd.merge(X, gb, how='left', left_on=['doc_pages', 'estimated_line_number'],
+                        right_on=['doc_pages', 'estimated_line_number'])
+
+        res_lines = output['res'].to_numpy()
+
+        result = np.vstack((res, res_lines))
         print('Done ! ')
-        return res
+        return np.transpose(result)
 
 
 class ContainsDigit(ParallelWordTransformer):

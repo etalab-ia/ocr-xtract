@@ -21,38 +21,6 @@ from jenkspy import JenksNaturalBreaks
 
 # TODO : add [NUMBER], [RARE] and [PAD] in vectorizer (PAD???)
 
-def goodness_of_variance_fit(array, classes):
-    # get the break points
-    jen = JenksNaturalBreaks(classes)
-    jen.fit(array)
-
-    # sum of squared deviations from array mean
-    sdam = np.sum((array - array.mean()) ** 2)
-
-    # do the actual classification
-    groups = jen.group(array)
-
-    # sum of squared deviations of class means
-    sdcm = sum([np.sum((group - group.mean()) ** 2) for group in groups])
-
-    # goodness of variance fit
-    gvf = (sdam - sdcm) / sdam
-
-    return gvf
-
-def get_optimal_nb_classes(y):
-    gvf = 0.0
-    nclasses = 2
-    while gvf < .9999:
-        gvf = goodness_of_variance_fit(y, nclasses)
-        if gvf < .9999:
-            nclasses += 1
-        if gvf == 1.0:
-            nclasses -= 1
-        if nclasses > int(len(y) / 2):
-            break
-    return nclasses
-
 
 class XtractVectorizer(DictVectorizer):
     """ This call is used for vectorizing text extracted from DocTr
@@ -238,25 +206,17 @@ class BagOfWordInLine(XtractVectorizer):
             for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
                 df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)].copy()
 
-                y = df['max_y'] * 100
-
-                nb_class = get_optimal_nb_classes(y)
-
-                jnb = JenksNaturalBreaks(nb_class=nb_class)
-                jnb.fit(y)
-
-                predicted_lines = jnb.predict(y)
-                df['line'] = predicted_lines
+                predicted_lines = df['estimated_line_number']
 
                 for line in predicted_lines:
-                    words = [str(w) for w in df[df['line'] == line]['word'].to_list()]
+                    words = [str(w) for w in df[df['estimated_line_number'] == line]['word'].to_list()]
                     bag = ' '.join(words)
                     self.array_lines[i] = line
                     self.array_bows[i] = self.vectorizer.transform([bag]).toarray()
                     i += 1
 
         self.array = np.vstack((self.array_lines.T, self.array_bows.T))
-        self.feature_names_ = ['lines'] +[f'bag_of_words_{f}' for f in self.vectorizer.get_feature_names()]
+        self.feature_names_ = ['estimated_line_number'] +[f'bag_of_words_{f}' for f in self.vectorizer.get_feature_names()]
 
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
         return np.transpose(self.array)

@@ -4,6 +4,10 @@ import sys
 import yaml
 
 import pandas as pd
+from jenkspy import JenksNaturalBreaks
+from tqdm import tqdm
+
+from src.models_training.utils_prepare import get_optimal_nb_classes
 
 if __name__ == "__main__":
     params = yaml.safe_load(open("params.yaml"))["prepare"]
@@ -28,6 +32,22 @@ if __name__ == "__main__":
     # creates unique hash that combines document name and page number
     df = pd.read_csv(input, sep='\t')
     df['doc_pages'] = df.apply(lambda x: str(x['document_name']) + str(x['page_id']), axis=1)
+
+    # estimate lines in document
+    all_estimated_lines = []
+    for page in tqdm(df['doc_pages'].unique()):
+        df_page = df[df['doc_pages'] == page].copy()
+        y = df_page['max_y'] * 100
+
+        nb_class = get_optimal_nb_classes(y)
+
+        jnb = JenksNaturalBreaks(nb_class=nb_class)
+        jnb.fit(y)
+
+        estimated_lines = jnb.predict(y)
+        all_estimated_lines.extend(estimated_lines)
+
+    df['estimated_line_number'] = all_estimated_lines
 
     # shuffle and split
     list_pages = df['doc_pages'].unique()
