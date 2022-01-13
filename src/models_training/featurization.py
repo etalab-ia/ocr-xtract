@@ -47,7 +47,8 @@ if __name__ == "__main__":
     search_words = ['salaire', 'net', 'impots', 'periode', 'revenu', 'avant', 'sarl', 'sas', 'rue', 'monsieur',
                     'madame', 'm.', 'mme.', 'du', 'au']
 
-    pipe_feature = FeatureUnion([('window_transformer', WindowTransformerList(searched_words=search_words,
+    pipe_feature = FeatureUnion([
+        ('window_transformer', WindowTransformerList(searched_words=search_words,
                                                                               n_jobs=n_jobs,
                                                                               min_df=min_df)),
                                  ('bag_of_words', BagOfWordInLine(searched_words=search_words,
@@ -56,8 +57,8 @@ if __name__ == "__main__":
                                  ('is_date', IsDate(n_jobs=n_jobs)),
                                  ("position", BoxPositionGetter()),
                                  ('is_digit', ContainsDigit(n_jobs=n_jobs)),
-                                 ('is_nom', IsNom(n_jobs=n_jobs)),
-                                 ('is_prenom', IsPrenom(n_jobs=n_jobs)),
+                                 ('is_nom', IsNom(n_jobs=n_jobs, postprocess='kbins')),
+                                 ('is_prenom', IsPrenom(n_jobs=n_jobs, postprocess='kbins')),
                                  ])
 
     X_train = pipe_feature.fit_transform(X_train)
