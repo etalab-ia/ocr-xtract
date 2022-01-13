@@ -50,19 +50,19 @@ stages:
       size: 8573
       nfiles: 5
     - path: src/models_training/featurization.py
-      md5: c3ae75a6d32bf3d1e13c3039e6a931a7
-      size: 3024
+      md5: 2de7735c4c6b764ffd4197350bd7ad59
+      size: 3075
     - path: src/preprocessing
-      md5: 7b5ecf901e3e8c27d5ecf7a38860549b.dir
-      size: 3281823
+      md5: 8960075cb6e545ca91cd2a88a2970207.dir
+      size: 3283242
       nfiles: 10
     params:
       params.yaml:
         featurize_fdp.data_augmentation: true
     outs:
     - path: data_dvc/salary/features
-      md5: 87f40cd1a37364abb29e1c87e7f77272.dir
-      size: 1123912386
+      md5: 3b466bc1d8c83b099c90445cd0d44d7f.dir
+      size: 1123913065
       nfiles: 2
   train_fpd:
     cmd: python -m src.models_training.train data/salary_for_training/features fdp.json
@@ -120,27 +120,27 @@ stages:
       size: 8573
       nfiles: 5
     - path: src/models_training/featurization.py
-      md5: c3ae75a6d32bf3d1e13c3039e6a931a7
-      size: 3024
+      md5: 2de7735c4c6b764ffd4197350bd7ad59
+      size: 3075
     - path: src/preprocessing
-      md5: 7b5ecf901e3e8c27d5ecf7a38860549b.dir
-      size: 3281823
+      md5: 8960075cb6e545ca91cd2a88a2970207.dir
+      size: 3283242
       nfiles: 10
     params:
       params.yaml:
         featurize_cni.data_augmentation: false
     outs:
     - path: data_dvc/cni_recto/features
-      md5: caaa6dfc07c556474f28f284433fc041.dir
-      size: 9282829
+      md5: 834930310d041b1e4d29516078fa6cf8.dir
+      size: 9283508
       nfiles: 2
   train_fdp:
     cmd: python -m src.models_training.train data_dvc/salary/features data_dvc/salary/scheme.json
       data_dvc/salary/model train_fdp
     deps:
     - path: data_dvc/salary/features
-      md5: 87f40cd1a37364abb29e1c87e7f77272.dir
-      size: 1123912386
+      md5: 3b466bc1d8c83b099c90445cd0d44d7f.dir
+      size: 1123913065
       nfiles: 2
     - path: data_dvc/salary/scheme.json
       md5: 13c424e30841b81c7745436a75440531
@@ -161,20 +161,20 @@ stages:
         train_fdp.optimize: false
     outs:
     - path: data_dvc/salary/model
-      md5: 6254866b8e6c8bf0da5d541fa73f3ad9.dir
-      size: 7906776
+      md5: 3a8c41b0e7fa218423b4b2ae4711b31a.dir
+      size: 6614969
       nfiles: 5
   eval_fdp:
     cmd: python -m src.models_training.eval data_dvc/salary/features data_dvc/salary/scheme.json
       data_dvc/salary/model data_dvc/salary/results
     deps:
     - path: data_dvc/salary/features
-      md5: 87f40cd1a37364abb29e1c87e7f77272.dir
-      size: 1123912386
+      md5: 3b466bc1d8c83b099c90445cd0d44d7f.dir
+      size: 1123913065
       nfiles: 2
     - path: data_dvc/salary/model
-      md5: 6254866b8e6c8bf0da5d541fa73f3ad9.dir
-      size: 7906776
+      md5: 3a8c41b0e7fa218423b4b2ae4711b31a.dir
+      size: 6614969
       nfiles: 5
     - path: data_dvc/salary/scheme.json
       md5: 13c424e30841b81c7745436a75440531
@@ -187,15 +187,15 @@ stages:
       size: 1827
     outs:
     - path: data_dvc/salary/results/results.json
-      md5: bd0201a5fef7875ecd875e7c15f51c7c
-      size: 220
+      md5: fdcf4992df02d5194c49a92b10f6213d
+      size: 205
   train_cni:
     cmd: python -m src.models_training.train data_dvc/cni_recto/features data_dvc/cni_recto/scheme.json
       data_dvc/cni_recto/model train_cni
     deps:
     - path: data_dvc/cni_recto/features
-      md5: caaa6dfc07c556474f28f284433fc041.dir
-      size: 9282829
+      md5: 834930310d041b1e4d29516078fa6cf8.dir
+      size: 9283508
       nfiles: 2
     - path: data_dvc/cni_recto/scheme.json
       md5: fc09dc8b7dbce83baa7b9f52718b94e5
@@ -216,20 +216,20 @@ stages:
         train_cni.optimize: false
     outs:
     - path: data_dvc/cni_recto/model
-      md5: 3487d2b3beb513a0ad8ad570bf0d0ccb.dir
-      size: 409088
+      md5: 3a1c54e2efda1770452451f3d0e4cbd2.dir
+      size: 342363
       nfiles: 3
   eval_cni:
     cmd: python -m src.models_training.eval data_dvc/cni_recto/features data_dvc/cni_recto/scheme.json
       data_dvc/cni_recto/model data_dvc/cni_recto/results
     deps:
     - path: data_dvc/cni_recto/features
-      md5: caaa6dfc07c556474f28f284433fc041.dir
-      size: 9282829
+      md5: 834930310d041b1e4d29516078fa6cf8.dir
+      size: 9283508
       nfiles: 2
     - path: data_dvc/cni_recto/model
-      md5: 3487d2b3beb513a0ad8ad570bf0d0ccb.dir
-      size: 409088
+      md5: 3a1c54e2efda1770452451f3d0e4cbd2.dir
+      size: 342363
       nfiles: 3
     - path: data_dvc/cni_recto/scheme.json
       md5: fc09dc8b7dbce83baa7b9f52718b94e5
@@ -242,5 +242,5 @@ stages:
       size: 1827
     outs:
     - path: data_dvc/cni_recto/results/results.json
-      md5: ddf90a3ede4a746669d18c02d24421c2
-      size: 130
+      md5: 9b531478d96bc3625aad8dcf44df17d1
+      size: 114
