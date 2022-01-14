@@ -1,13 +1,17 @@
 prepare:
   train_split: 0.80
   seed: 42
-  debug: False
+  debug: True
 
 featurize_fdp:
   data_augmentation: True
   min_df: 0.2
 
 featurize_cni:
+  data_augmentation: False
+  min_df: 0.2
+
+featurize_quittances:
   data_augmentation: False
   min_df: 0.2
 
@@ -20,6 +24,14 @@ train_fdp:
   max_leaf_nodes: 60
 
 train_cni:
+  optimize: False
+  n_iter: 50
+  n_estimators: 200
+  learning_rate: 0.2
+  max_depth: 3
+  max_leaf_nodes: 12
+
+train_quittances:
   optimize: False
   n_iter: 50
   n_estimators: 200

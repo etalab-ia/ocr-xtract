@@ -97,3 +97,52 @@ stages:
     metrics:
       - data_dvc/cni_recto/results/results.json:
           cache: false
+  prepare_quittances:
+    cmd: python -m src.models_training.prepare data_dvc/rent_receipts/full_data_set.csv  data_dvc/rent_receipts/prepared
+    deps:
+    - data_dvc/rent_receipts/full_data_set.csv
+    - src/models_training/prepare.py
+    params:
+    - prepare.seed
+    - prepare.train_split
+    - prepare.debug
+    outs:
+    - data_dvc/rent_receipts/prepared
+  featurize_quittances:
+    cmd: python -m src.models_training.featurization data_dvc/rent_receipts/prepared  data_dvc/rent_receipts/features featurize_quittances
+    deps:
+      - data_dvc/rent_receipts/prepared
+      - src/augmentation
+      - src/preprocessing
+      - src/models_training/featurization.py
+    params:
+      - featurize_quittances.data_augmentation
+    outs:
+      - data_dvc/rent_receipts/features
+  train_quittances:
+    cmd: python -m src.models_training.train data_dvc/rent_receipts/features data_dvc/rent_receipts/scheme.json data_dvc/rent_receipts/model train_fdp
+    deps:
+      - data_dvc/rent_receipts/scheme.json
+      - data_dvc/rent_receipts/features
+      - src/models_training/utils.py
+      - src/models_training/train.py
+    params:
+      - train_quittances.optimize
+      - train_quittances.n_iter
+      - train_quittances.n_estimators
+      - train_quittances.learning_rate
+      - train_quittances.max_depth
+      - train_quittances.max_leaf_nodes
+    outs:
+      - data_dvc/rent_receipts/model
+  eval_quittances:
+    cmd: python -m src.models_training.eval data_dvc/rent_receipts/features data_dvc/rent_receipts/scheme.json data_dvc/rent_receipts/model data_dvc/rent_receipts/results
+    deps:
+      - data_dvc/rent_receipts/scheme.json
+      - data_dvc/rent_receipts/model
+      - data_dvc/rent_receipts/features
+      - src/models_training/utils.py
+      - src/models_training/eval.py
+    metrics:
+      - data_dvc/rent_receipts/results/results.json:
+          cache: false
