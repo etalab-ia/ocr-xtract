@@ -47,7 +47,8 @@ if __name__ == "__main__":
     search_words = ['salaire', 'net', 'impots', 'periode', 'revenu', 'avant', 'sarl', 'sas', 'rue', 'monsieur',
                     'madame', 'm.', 'mme.', 'du', 'au']
 
-    pipe_feature = FeatureUnion([('window_transformer', WindowTransformerList(searched_words=search_words,
+    pipe_feature = FeatureUnion([
+        ('window_transformer', WindowTransformerList(searched_words=search_words,
                                                                               n_jobs=n_jobs,
                                                                               min_df=min_df)),
                                  ('bag_of_words', BagOfWordInLine(searched_words=search_words,
