@@ -25,7 +25,10 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
             if self.postprocess is not None:
                 X = self.fit(X, **fit_params).transform(X)
                 if self.postprocess == "kbins":
-                    self.postprocesser = KBinsDiscretizer(n_bins=5, strategy='kmeans', encode='ordinal')
+                    self.postprocesser = KBinsDiscretizer(n_bins=10, strategy='quantile', encode='ordinal')
+                    return self.postprocesser.fit_transform(X)
+                if self.postprocess == 'yeo-johnson':
+                    self.postprocesser = PowerTransformer(method='yeo-johnson')
                     return self.postprocesser.fit_transform(X)
             else:
                 return self.fit(X, **fit_params).transform(X)
