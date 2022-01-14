@@ -57,8 +57,8 @@ if __name__ == "__main__":
                                  ('is_date', IsDate(n_jobs=n_jobs)),
                                  ("position", BoxPositionGetter()),
                                  ('is_digit', ContainsDigit(n_jobs=n_jobs)),
-                                 ('is_nom', IsNom(n_jobs=n_jobs, postprocess='yeo-johnson')),
-                                 ('is_prenom', IsPrenom(n_jobs=n_jobs, postprocess='yeo-johnson')),
+                                 ('is_nom', IsNom(n_jobs=n_jobs)),
+                                 ('is_prenom', IsPrenom(n_jobs=n_jobs)),
                                  ])
 
     X_train = pipe_feature.fit_transform(X_train)
