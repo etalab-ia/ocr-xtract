@@ -55,7 +55,7 @@ if __name__ == "__main__":
                                                                   n_jobs=n_jobs,
                                                                   min_df=min_df)),
                                  ('is_date', IsDate(n_jobs=n_jobs)),
-                                 ("position", BoxPositionGetter()),
+                                 ("position", BoxPositionGetter(postprocess='min_max')),
                                  ('is_digit', ContainsDigit(n_jobs=n_jobs)),
                                  ('is_nom', IsNom(n_jobs=n_jobs)),
                                  ('is_prenom', IsPrenom(n_jobs=n_jobs)),

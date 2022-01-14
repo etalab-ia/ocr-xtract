@@ -3,6 +3,7 @@ from functools import partial
 from typing import List
 import re
 
+from sklearn.preprocessing import MinMaxScaler
 from tqdm import tqdm
 
 import multiprocessing as mp
@@ -201,11 +202,27 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
     """
     Transforms the box position given with min_x, max_y, min_y, max_y in two values x y being the center of the box
     """
+    def __init__(self, postprocess=None):
+        self.postprocess = postprocess
+
     def fit(self, X, y=None):
         return self
 
+    def fit_transform(self, X, y=None, **fit_params):
+        if y is None:
+            if self.postprocess is not None:
+                X = self.fit(X, **fit_params).transform(X)
+                if self.postprocess == 'min-max':
+                    self.postprocesser = MinMaxScaler()
+                    return self.postprocesser.fit_transform(X)
+            else:
+                return self.fit(X, **fit_params).transform(X)
+        else:
+            # fit method of arity 2 (supervised transformation)
+            return self.fit(X, y, **fit_params).transform(X)
+
     def get_feature_names(self):
-        return ["middle_x","middle_y"]
+        return ["middle_x", "middle_y"]
 
     def find_middle(self, X):
         middle_x = (X['min_x'] + X["max_x"])/2
@@ -216,7 +233,13 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
 
     def transform(self, X):
         print(f"Transforming with {self.__class__.__name__}")
-        return self.find_middle(X)
+
+        res = self.find_middle(X)
+
+        if hasattr(self, 'postprocesser'):
+            res = self.postprocesser.transform(res)
+
+        return res
 
 
 class BagOfWordInLine(XtractVectorizer):
