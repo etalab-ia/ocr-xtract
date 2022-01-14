@@ -212,9 +212,11 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
         if y is None:
             if self.postprocess is not None:
                 X = self.fit(X, **fit_params).transform(X)
-                if self.postprocess == 'min-max':
+                if self.postprocess == 'min_max':
                     self.postprocesser = MinMaxScaler()
                     return self.postprocesser.fit_transform(X)
+                else:
+                    raise AttributeError(self.postprocess + ' is not a know postprocessor')
             else:
                 return self.fit(X, **fit_params).transform(X)
         else:

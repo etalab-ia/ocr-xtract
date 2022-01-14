@@ -30,6 +30,8 @@ class ParallelWordTransformer(TransformerMixin, BaseEstimator):
                 if self.postprocess == 'yeo-johnson':
                     self.postprocesser = PowerTransformer(method='yeo-johnson')
                     return self.postprocesser.fit_transform(X)
+                else:
+                    raise AttributeError(self.postprocess + ' is not a know postprocessor')
             else:
                 return self.fit(X, **fit_params).transform(X)
         else:
