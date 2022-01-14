@@ -208,41 +208,27 @@ class BoxPositionGetter(TransformerMixin, BaseEstimator):
     def fit(self, X, y=None):
         return self
 
-    def fit_transform(self, X, y=None, **fit_params):
-        if y is None:
-            if self.postprocess is not None:
-                X = self.fit(X, **fit_params).transform(X)
-                if self.postprocess == 'min_max':
-                    self.postprocesser = MinMaxScaler()
-                    return self.postprocesser.fit_transform(X)
-                else:
-                    raise AttributeError(self.postprocess + ' is not a know postprocessor')
-            else:
-                return self.fit(X, **fit_params).transform(X)
-        else:
-            # fit method of arity 2 (supervised transformation)
-            return self.fit(X, y, **fit_params).transform(X)
-
     def get_feature_names(self):
         return ["middle_x", "middle_y"]
 
     def find_middle(self, X):
-        middle_x = (X['min_x'] + X["max_x"])/2
-        middle_y = (X['min_y'] + X["max_y"])/2
-        middle_x = middle_x.to_numpy()
-        middle_y = middle_y.to_numpy()
-        return np.vstack([middle_x,middle_y]).T
+        x = np.array([])
+        y = np.array([])
+        for page in X['doc_pages'].unique():
+            df = X[X['doc_pages'] == page].copy()
+            middle_x = ((df['min_x'] + df["max_x"])/2).to_numpy()
+            middle_y = ((df['min_y'] + df["max_y"])/2).to_numpy()
+            if self.postprocess == 'min_max':
+                minmax = MinMaxScaler()
+                middle_x = minmax.fit_transform(middle_x.reshape(-1, 1))
+                middle_y = minmax.fit_transform(middle_y.reshape(-1, 1))
+            x = np.concatenate((x, middle_x.reshape(-1)))
+            y = np.concatenate((y, middle_y.reshape(-1)))
+        return np.vstack([x, y]).T
 
     def transform(self, X):
         print(f"Transforming with {self.__class__.__name__}")
-
-        res = self.find_middle(X)
-
-        if hasattr(self, 'postprocesser'):
-            res = self.postprocesser.transform(res)
-
-        return res
-
+        return self.find_middle(X)
 
 class BagOfWordInLine(XtractVectorizer):
     """

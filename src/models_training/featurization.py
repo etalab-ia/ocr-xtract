@@ -48,12 +48,12 @@ if __name__ == "__main__":
                     'madame', 'm.', 'mme.', 'du', 'au']
 
     pipe_feature = FeatureUnion([
-        # ('window_transformer', WindowTransformerList(searched_words=search_words,
-        #                                                                       n_jobs=n_jobs,
-        #                                                                       min_df=min_df)),
-        #                          ('bag_of_words', BagOfWordInLine(searched_words=search_words,
-        #                                                           n_jobs=n_jobs,
-        #                                                           min_df=min_df)),
+        ('window_transformer', WindowTransformerList(searched_words=search_words,
+                                                                              n_jobs=n_jobs,
+                                                                              min_df=min_df)),
+                                 ('bag_of_words', BagOfWordInLine(searched_words=search_words,
+                                                                  n_jobs=n_jobs,
+                                                                  min_df=min_df)),
                                  ('is_date', IsDate(n_jobs=n_jobs)),
                                  ("position", BoxPositionGetter(postprocess='min_max')),
                                  ('is_digit', ContainsDigit(n_jobs=n_jobs)),
