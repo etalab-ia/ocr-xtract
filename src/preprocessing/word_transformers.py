@@ -8,7 +8,7 @@ import difflib
 import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin, BaseEstimator
-from sklearn.preprocessing import KBinsDiscretizer
+from sklearn.preprocessing import KBinsDiscretizer, PowerTransformer
 from tqdm import tqdm
 
 
