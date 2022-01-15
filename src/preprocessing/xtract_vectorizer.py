@@ -70,8 +70,11 @@ class XtractVectorizer(DictVectorizer):
         If float, the parameter represents a proportion of documents, integer
         absolute counts.
         This parameter is ignored if vocabulary is not None.
+
     Attributes
     ----------
+
+
     """
     def __init__(self, searched_words: List[str] = None, n_jobs: int = -1, min_df: float = 0.2):
         super().__init__(sparse=False)
@@ -131,8 +134,8 @@ class WindowTransformerList(XtractVectorizer):
 
     def get_relative_positions(self, vocab_i, list_plain_words_in_page, df):
         # TODO : the calculation of the distances between the words of the vocab is done twice, we should avoid that
-        array_angles = np.zeros(len(list_plain_words_in_page))  # false value for angle
-        array_distances = np.ones(len(list_plain_words_in_page)) * 1  # max distance
+        array_angles = np.ones(len(list_plain_words_in_page))  # false value for angle
+        array_distances = np.ones(len(list_plain_words_in_page)) # max distance
         if vocab_i in list_plain_words_in_page:
             wi_list = [i for i, x in enumerate(list_plain_words_in_page) if x == vocab_i]
             for wi in wi_list:
@@ -141,7 +144,7 @@ class WindowTransformerList(XtractVectorizer):
                     x_j, y_j = df.iloc[j]['min_x'], df.iloc[j]['min_y']
                     distance = cosine((x_i, y_i), (x_j, y_j))
                     if distance < array_distances[j]:  # in case there are several identical duplicate of vocab i, take the closest
-                        array_angles[j] = np.arctan2((y_j - y_i), (x_j - x_i))
+                        array_angles[j] = np.arctan2((y_j - y_i), (x_j - x_i)) / np.pi
                         array_distances[j] = distance
         return array_angles, array_distances
 
@@ -160,7 +163,7 @@ class WindowTransformerList(XtractVectorizer):
                 res.append(
                     self.get_relative_positions(vocab_i=voc, list_plain_words_in_page=list_plain_words_in_page, df=df))
             array_angle = np.array([r[0] for r in res]).T
-            array_distance = np.array([r[0] for r in res]).T
+            array_distance = np.array([r[1] for r in res]).T
             return array_angle, array_distance
 
 
@@ -267,6 +270,3 @@ class BagOfWordInLine(XtractVectorizer):
 
     def transform(self, X: pd.DataFrame):
         return self._transform(X)
-
-
-

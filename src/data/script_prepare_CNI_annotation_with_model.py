@@ -5,8 +5,8 @@ import os
 import pickle
 
 
-img_folder_path = "data/quittances/sample1/"
-output_path = "data/quittances/preannotation/quittance_preannotation_sample1.json"
+img_folder_path = "data/CNI/test"
+output_path = "data/CNI/label_studio_test.json"
 model_path = "model/CNI_model"
 
 
