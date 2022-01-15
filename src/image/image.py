@@ -177,6 +177,10 @@ class Image():
 
         X_feats = self.pipe_feature.transform(X)
         features = self.pipe_feature.get_feature_names()
+
+        # Debug
+        X.loc[:, features] = X_feats
+
         model_folder = os.path.join(self.folder, "model")
         list_model = os.listdir(model_folder)
 
@@ -200,8 +204,6 @@ class Image():
             X_candidate, iscandidate = select_candidate(candidate_name, candidate_feature, features, X_feats)
             X.loc[iscandidate, candidate_name] = model.predict(X_candidate)
 
-            # Debug
-            X.loc[:, features] = X_feats
 
             list_words = X[X[candidate_name] == 1].sort_values(['min_x'])['word'].to_list()
 
@@ -227,8 +229,8 @@ if __name__ == "__main__":
     global start
     start = datetime.now()
     print(start)
-    # image = RectoCNI('./tutorials/model_CNI.png')
     image = Image('./data/salary/test/3fc1665f-af1b-4ced-9194-19610f1debe4.jpg', 'data_dvc/salary')
+    image = Image('./data/CNI_76e4a9a1-2eda-4cd9-9f37-28f773336bb1.png', 'data_dvc/cni_recto')
     image.align_images()
     response = image.extract_information()
     print(response)
