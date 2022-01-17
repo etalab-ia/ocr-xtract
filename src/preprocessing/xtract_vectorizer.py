@@ -42,21 +42,22 @@ def goodness_of_variance_fit(array, classes):
 
 def get_optimal_nb_classes(y):
     gvf = 0.0
-    nclasses = 2
+    nclasses = 3
     while gvf < .9999:
+        if nclasses > int(len(y) / 2):
+            break
         gvf = goodness_of_variance_fit(y, nclasses)
         if gvf < .9999:
             nclasses += 1
         if gvf == 1.0:
+            if nclasses == 3:
+                return nclasses
             nclasses -= 1
-        if nclasses > int(len(y) / 2):
-            break
     return nclasses
 
 
 class XtractVectorizer(DictVectorizer):
     """ This call is used for vectorizing text extracted from DocTr
-
     Parameters
     ----------
     searched_words : List[str], default=None
@@ -240,13 +241,21 @@ class BagOfWordInLine(XtractVectorizer):
 
                 y = df['max_y'] * 100
 
-                nb_class = get_optimal_nb_classes(y)
+                if len(y) > 3:
+                    nb_class = get_optimal_nb_classes(y)
 
-                jnb = JenksNaturalBreaks(nb_class=nb_class)
-                jnb.fit(y)
+                    jnb = JenksNaturalBreaks(nb_class=nb_class)
 
-                predicted_lines = jnb.predict(y)
-                df['line'] = predicted_lines
+                    if len(y) > nb_class:
+                        jnb.fit(y)
+                        predicted_lines = jnb.predict(y)
+                        df['line'] = predicted_lines
+                    else:
+                        predicted_lines = [0 for i in y]
+                        df['line'] = predicted_lines
+                else:
+                    predicted_lines = [0 for i in y]
+                    df['line'] = predicted_lines
 
                 for line in predicted_lines:
                     words = [str(w) for w in df[df['line'] == line]['word'].to_list()]
@@ -263,8 +272,3 @@ class BagOfWordInLine(XtractVectorizer):
 
     def transform(self, X: pd.DataFrame):
         return self._transform(X)
-
-
-
-
-
