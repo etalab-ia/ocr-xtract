@@ -120,7 +120,7 @@ stages:
     outs:
       - data_dvc/rent_receipts/features
   train_quittances:
-    cmd: python -m src.models_training.train data_dvc/rent_receipts/features data_dvc/rent_receipts/scheme.json data_dvc/rent_receipts/model train_fdp
+    cmd: python -m src.models_training.train data_dvc/rent_receipts/features data_dvc/rent_receipts/scheme.json data_dvc/rent_receipts/model train_quittances
     deps:
       - data_dvc/rent_receipts/scheme.json
       - data_dvc/rent_receipts/features

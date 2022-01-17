@@ -42,7 +42,7 @@ def goodness_of_variance_fit(array, classes):
 
 def get_optimal_nb_classes(y):
     gvf = 0.0
-    nclasses = 2
+    nclasses = 3
     while gvf < .9999:
         if nclasses > int(len(y) / 2):
             break
@@ -50,6 +50,8 @@ def get_optimal_nb_classes(y):
         if gvf < .9999:
             nclasses += 1
         if gvf == 1.0:
+            if nclasses == 3:
+                return nclasses
             nclasses -= 1
     return nclasses
 
@@ -239,12 +241,12 @@ class BagOfWordInLine(XtractVectorizer):
 
                 y = df['max_y'] * 100
 
-                if len(y) > 2:
+                if len(y) > 3:
                     nb_class = get_optimal_nb_classes(y)
 
                     jnb = JenksNaturalBreaks(nb_class=nb_class)
 
-                    if len(y) < nb_class:
+                    if len(y) > nb_class:
                         jnb.fit(y)
                         predicted_lines = jnb.predict(y)
                         df['line'] = predicted_lines
