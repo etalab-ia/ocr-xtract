@@ -241,7 +241,7 @@ class BagOfWordInLine(XtractVectorizer):
 
                 y = df['max_y'] * 100
 
-                if len(y) > 3:
+                if len(y) > 3: #TODO check if >2 works here. Normally it should be the case
                     nb_class = get_optimal_nb_classes(y)
 
                     jnb = JenksNaturalBreaks(nb_class=nb_class)
