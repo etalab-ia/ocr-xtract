@@ -184,7 +184,7 @@ class Image():
         model_folder = os.path.join(self.folder, "model")
         list_model = os.listdir(model_folder)
 
-        extracted_information ={}
+        extracted_information = {}
 
         for candidate_name in self.scheme.keys():
             print(candidate_name)
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     global start
     start = datetime.now()
     print(start)
-    image = Image('./data/salary/test/3fc1665f-af1b-4ced-9194-19610f1debe4.jpg', 'data_dvc/salary')
+    # image = Image('./data/salary/test/3fc1665f-af1b-4ced-9194-19610f1debe4.jpg', 'data_dvc/salary')
     image = Image('./data/CNI_76e4a9a1-2eda-4cd9-9f37-28f773336bb1.png', 'data_dvc/cni_recto')
     image.align_images()
     response = image.extract_information()
