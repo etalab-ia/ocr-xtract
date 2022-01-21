@@ -25,5 +25,5 @@ jobs:
         dvc remote modify minio secret_access_key $OURPASSWORD --local
     - name: Pull Data
       run: |
-        dvc get /data-dvc/cni_recto/model
-        dvc get /data-dvc/salary/model
+        dvc get . /data-dvc/cni_recto/model
+        dvc get . /data-dvc/salary/model
