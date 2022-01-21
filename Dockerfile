@@ -10,7 +10,6 @@ RUN apt-get update \
     && apt-get install --no-install-recommends git ffmpeg libsm6 libxext6 poppler-utils -y \
     && pip install --upgrade pip setuptools wheel \
     && pip install -r requirements.txt \
-    && pip install -r requirements_train.txt \
     && pip cache purge \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
