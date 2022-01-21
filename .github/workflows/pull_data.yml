@@ -1,0 +1,29 @@
+name: Python package
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install dvc
+    - name: Add mini credentials
+      with:
+        URL: ${{ secrets.URL }}
+        OURURL: ${{ secrets.OURURL }}
+        OURKEY: ${{ secrets.OURKEY }}
+        OURPASSWORD: ${{ secrets.OURPASSWORD }}
+      run: |
+        dvc remote add -d minio $URL -f --local
+        dvc remote modify minio endpointurl $OURURL --local
+        dvc remote modify minio access_key_id $OURKEY --local
+        dvc remote modify minio secret_access_key $OURPASSWORD --local
+    - name: Pull Data
+      run: |
+        dvc get /data-dvc/cni_recto/model
+        dvc get /data-dvc/salary/model
