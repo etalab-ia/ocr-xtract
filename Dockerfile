@@ -1,7 +1,7 @@
 FROM python:3.7-buster
 
 COPY requirements.txt requirements.txt
-COPY requirements_train.txt requirements_train.txt
+#COPY requirements_train.txt requirements_train.txt
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
