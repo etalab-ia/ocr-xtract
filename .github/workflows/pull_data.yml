@@ -26,4 +26,4 @@ jobs:
     - name: Pull Data
       run: |
         dvc pull data_dvc/cni_recto/model
-        dvc pull data_dvc/cni_recto/model
+        dvc pull data_dvc/salary/model
