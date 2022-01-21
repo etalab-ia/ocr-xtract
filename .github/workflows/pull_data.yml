@@ -19,10 +19,10 @@ jobs:
         OURKEY: ${{ secrets.OURKEY }}
         OURPASSWORD: ${{ secrets.OURPASSWORD }}
       run: |
-        dvc remote add -d minio $URL -f --local
-        dvc remote modify minio endpointurl $OURURL --local
-        dvc remote modify minio access_key_id $OURKEY --local
-        dvc remote modify minio secret_access_key $OURPASSWORD --local
+        dvc remote add -d minio URL -f --local
+        dvc remote modify minio endpointurl OURURL --local
+        dvc remote modify minio access_key_id OURKEY --local
+        dvc remote modify minio secret_access_key OURPASSWORD --local
     - name: Pull Data
       run: |
         dvc pull
