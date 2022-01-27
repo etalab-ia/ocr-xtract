@@ -28,6 +28,7 @@ if __name__ == "__main__":
     # creates unique hash that combines document name and page number
     df = pd.read_csv(input, sep='\t')
     df['doc_pages'] = df.apply(lambda x: str(x['document_name']) + str(x['page_id']), axis=1)
+    df['block_lines'] = df.apply(lambda x: str(x['block']) + '_' + str(x['line']), axis=1)
 
     # shuffle and split
     list_pages = df['doc_pages'].unique()

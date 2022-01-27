@@ -19,43 +19,6 @@ from stop_words import get_stop_words
 from jenkspy import JenksNaturalBreaks
 
 
-# TODO : add [NUMBER], [RARE] and [PAD] in vectorizer (PAD???)
-
-def goodness_of_variance_fit(array, classes):
-    # get the break points
-    jen = JenksNaturalBreaks(classes)
-    jen.fit(array)
-
-    # sum of squared deviations from array mean
-    sdam = np.sum((array - array.mean()) ** 2)
-
-    # do the actual classification
-    groups = jen.group(array)
-
-    # sum of squared deviations of class means
-    sdcm = sum([np.sum((group - group.mean()) ** 2) for group in groups])
-
-    # goodness of variance fit
-    gvf = (sdam - sdcm) / sdam
-
-    return gvf
-
-def get_optimal_nb_classes(y):
-    gvf = 0.0
-    nclasses = 3
-    while gvf < .9999:
-        if nclasses > int(len(y) / 2):
-            break
-        gvf = goodness_of_variance_fit(y, nclasses)
-        if gvf < .9999:
-            nclasses += 1
-        if gvf == 1.0:
-            if nclasses == 3:
-                return nclasses
-            nclasses -= 1
-    return nclasses
-
-
 class XtractVectorizer(DictVectorizer):
     """ This call is used for vectorizing text extracted from DocTr
     Parameters
@@ -197,29 +160,6 @@ class WindowTransformerList(XtractVectorizer):
         return self._transform(X)
 
 
-
-class BoxPositionGetter(TransformerMixin, BaseEstimator):
-    """
-    Transforms the box position given with min_x, max_y, min_y, max_y in two values x y being the center of the box
-    """
-    def fit(self, X, y=None):
-        return self
-
-    def get_feature_names(self):
-        return ["middle_x","middle_y"]
-
-    def find_middle(self, X):
-        middle_x = (X['min_x'] + X["max_x"])/2
-        middle_y = (X['min_y'] + X["max_y"])/2
-        middle_x = middle_x.to_numpy()
-        middle_y = middle_y.to_numpy()
-        return np.vstack([middle_x,middle_y]).T
-
-    def transform(self, X):
-        print(f"Transforming with {self.__class__.__name__}")
-        return self.find_middle(X)
-
-
 class BagOfWordInLine(XtractVectorizer):
     """
     This vectorizer clusters the document by lines with Jenks Natural Breaks.
@@ -232,43 +172,23 @@ class BagOfWordInLine(XtractVectorizer):
         print(f"Transforming {self.__class__.__name__}")
         print(f"vocab that will be used for transform {self.vocab}")
 
-        self.array_lines = np.zeros(doct_documents.shape[0])
         self.array_bows = np.zeros((doct_documents.shape[0], len(self.vectorizer.get_feature_names())))
         i = 0
         for doc in tqdm(doct_documents['document_name'].unique()):
             for page_id, page in enumerate(doct_documents[doct_documents['document_name'] == doc]['page_id'].unique()):
                 df = doct_documents[(doct_documents['document_name'] == doc) & (doct_documents['page_id'] == page)].copy()
 
-                y = df['max_y'] * 100
-
-                if len(y) > 3: #TODO check if >2 works here. Normally it should be the case
-                    nb_class = get_optimal_nb_classes(y)
-
-                    jnb = JenksNaturalBreaks(nb_class=nb_class)
-
-                    if len(y) > nb_class:
-                        jnb.fit(y)
-                        predicted_lines = jnb.predict(y)
-                        df['line'] = predicted_lines
-                    else:
-                        predicted_lines = [0 for i in y]
-                        df['line'] = predicted_lines
-                else:
-                    predicted_lines = [0 for i in y]
-                    df['line'] = predicted_lines
-
-                for line in predicted_lines:
-                    words = [str(w) for w in df[df['line'] == line]['word'].to_list()]
+                for line in df['block_lines'].tolist():
+                    words = [str(w) for w in df[df['block_lines'] == line]['word'].to_list()]
                     bag = ' '.join(words)
                     self.array_lines[i] = line
                     self.array_bows[i] = self.vectorizer.transform([bag]).toarray()
                     i += 1
 
-        self.array = np.vstack((self.array_lines.T, self.array_bows.T))
-        self.feature_names_ = ['lines'] +[f'bag_of_words_{f}' for f in self.vectorizer.get_feature_names()]
+        self.feature_names_ = [f'bag_of_words_{f}' for f in self.vectorizer.get_feature_names()]
 
         # TODO : keep the name of the doc and pages in a self.list_doc self.list_pages
-        return np.transpose(self.array)
+        return self.array_bows
 
     def transform(self, X: pd.DataFrame):
         return self._transform(X)
