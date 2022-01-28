@@ -57,11 +57,16 @@ class AnnotationJsonCreator:
 
 
 class LabelStudioConvertor:
-    """class for converting label studio json files into dataframe"""
+    """class for converting label studio json files into dataframe
+    By defautl, annotations = True, meaning that the json is the output file of label studio
+    If annotations = False, the json is the output file of the class AnnotationJsonCreator"""
 
-    def __init__(self, jsonfile: Path, output_path: Path = None):
+    def __init__(self, jsonfile: Path, output_path: Path = None, annotations: bool = True):
         self.jsonfile = jsonfile
         self.output_path = output_path
+        self.annotations = annotations
+        self.type = "annotations" if self.annotations else "predictions"
+
 
     def transform(self, all_columns: bool = False, sep: str = "\t"):
         self.sep = sep
@@ -71,8 +76,10 @@ class LabelStudioConvertor:
         df_annotations = pd.DataFrame()
         df = pd.json_normalize(data)
         df_col = ["file_upload", "created_at", "updated_at", "project", "data.image"]
+        if self.type == "predictions":
+            df_col = ["data.image"]
         for index, row in df.iterrows():
-            df_temp = pd.json_normalize(row["annotations"])
+            df_temp = pd.json_normalize(row[self.type])
             df_temp_col = [x for x in df_temp.columns if "result" not in x]
             for index2, row2 in df_temp.iterrows():
 
@@ -85,8 +92,10 @@ class LabelStudioConvertor:
 
         df_annotations["label"] = df_annotations["value.rectanglelabels"].map(
             lambda x: x[0] if (pd.isna(x)==False and len(x)>0) else 'O')
-        df_annotations["document_class"] = df_annotations["value.choices"].map(
-            lambda x: x[0] if (pd.isna(x) == False and len(x) > 0) else 'O')
+
+        if self.type =="annotations":
+            df_annotations["document_class"] = df_annotations["value.choices"].map(
+                lambda x: x[0] if (pd.isna(x) == False and len(x) > 0) else 'O')
         # rename col names
         dict_rename = {'value.x': 'min_x', 'value.y': 'min_y'}
         df_annotations.rename(columns=dict_rename, inplace=True)
@@ -104,6 +113,9 @@ class LabelStudioConvertor:
                                 'document_class',
                                 "completed_by.email",
                                 'original_width', 'original_height']
+            if self.type == "predictions":
+                minimal_col_list = [x for x in minimal_col_list if x not in ['document_class', "completed_by.email"]]
+
             df_annotations = df_annotations[minimal_col_list]
 
         for col in ['min_x','min_y','max_x','max_y']:
