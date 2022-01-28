@@ -88,14 +88,16 @@ class LabelStudioConvertor:
                     df2temp[col] = df._get_value(index, col)
                 for col in df_temp_col:
                     df2temp[col] = df_temp._get_value(index2, col)
+                if self.type == "annotations":
+                    if "value.choices" in df2temp.columns:
+                        df2temp["document_class"] = df2temp["value.choices"].map(
+                            lambda x: x[0] if (pd.isna(x) == False and len(x) > 0) else 'O')
+                        df2temp["document_class"] = df2temp["document_class"].max()
                 df_annotations = pd.concat([df_annotations, df2temp])
 
         df_annotations["label"] = df_annotations["value.rectanglelabels"].map(
             lambda x: x[0] if (pd.isna(x)==False and len(x)>0) else 'O')
 
-        if self.type =="annotations":
-            df_annotations["document_class"] = df_annotations["value.choices"].map(
-                lambda x: x[0] if (pd.isna(x) == False and len(x) > 0) else 'O')
         # rename col names
         dict_rename = {'value.x': 'min_x', 'value.y': 'min_y'}
         df_annotations.rename(columns=dict_rename, inplace=True)
