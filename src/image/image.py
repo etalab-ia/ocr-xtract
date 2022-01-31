@@ -174,7 +174,6 @@ class Image():
         del dataset_creator
         shutil.rmtree(temp_folder)
 
-
         X_feats = self.pipe_feature.transform(X)
         features = self.pipe_feature.get_feature_names()
 
@@ -229,8 +228,14 @@ if __name__ == "__main__":
     global start
     start = datetime.now()
     print(start)
+<<<<<<< HEAD
     # image = Image('./data/salary/test/3fc1665f-af1b-4ced-9194-19610f1debe4.jpg', 'data_dvc/salary')
     image = Image('./data/CNI_76e4a9a1-2eda-4cd9-9f37-28f773336bb1.png', 'data_dvc/cni_recto')
+=======
+    # image = Image('./tutorials/model_CNI.png', 'data_dvc/cni_recto')
+    # image = Image('./data/salary/test/3fc1665f-af1b-4ced-9194-19610f1debe4.jpg', 'data_dvc/salary')
+    image = Image('./data/quittances/sample1/b4587d5d-0165-4fbd-9c7e-cfdeacd6575a.jpg', './data_dvc/rent_receipts')
+>>>>>>> straightened_annotated_images
     image.align_images()
     response = image.extract_information()
     print(response)
