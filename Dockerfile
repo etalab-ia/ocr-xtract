@@ -1,17 +1,27 @@
-FROM python:3.7-buster
+#FROM python:3.7-buster
+FROM nvidia/cuda:10.2-cudnn8-runtime-ubuntu18.04
 
-COPY requirements.txt requirements.txt
-COPY requirements_train.txt requirements_train.txt
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends git ffmpeg libsm6 libxext6 poppler-utils -y \
-    && pip install --upgrade pip setuptools wheel \
-    && pip install -r requirements.txt \
-    && pip install -r requirements_train.txt \
-    && pip cache purge \
+    && apt-get install -y software-properties-common  \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get install --no-install-recommends -y git ffmpeg libsm6 libxext6 poppler-utils build-essential  \
+        python3-pip \
+        python3 \
+        python3-dev \
+        python3-distutils \
+        python3-setuptools \
+    && pip3 install --upgrade pip setuptools wheel
+
+COPY requirements.txt requirements.txt
+
+RUN pip3 install -r requirements.txt \
+    && pip3 cache purge \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
