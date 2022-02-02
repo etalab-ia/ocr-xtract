@@ -174,7 +174,6 @@ class Image():
         del dataset_creator
         shutil.rmtree(temp_folder)
 
-
         X_feats = self.pipe_feature.transform(X)
         features = self.pipe_feature.get_feature_names()
 
