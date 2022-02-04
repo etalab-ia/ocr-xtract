@@ -26,10 +26,10 @@ RUN pip3 install -r requirements.txt \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
 
-RUN python -m spacy download fr_core_news_lg
+RUN python3 -m spacy download fr_core_news_lg
 
 COPY download_doctr_models.py .
-RUN python download_doctr_models.py
+RUN python3 download_doctr_models.py
 
 COPY . .
 WORKDIR .

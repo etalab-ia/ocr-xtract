@@ -51,6 +51,7 @@ First, let's read in the annotations which we prepared in the other notebook. Th
 
 import torch
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch.cuda.empty_cache()
 print(device)
 
 import pandas as pd
@@ -189,55 +190,9 @@ from transformers import LayoutLMv2ForTokenClassification, AdamW
 import torch
 from tqdm.notebook import tqdm
 
-model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased',
-                                                                      num_labels=len(labels))
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(device)
+model = LayoutLMv2ForTokenClassification.from_pretrained("data_dvc/CORD/Checkpoints/")
 model.to(device)
-optimizer = AdamW(model.parameters(), lr=5e-5)
-
-global_step = 0
-num_train_epochs = 4
-
-#put the model in training mode
-model.train() 
-for epoch in range(num_train_epochs):  
-   print("Epoch:", epoch)
-   for batch in tqdm(train_dataloader):
-        # get the inputs;
-        input_ids = batch['input_ids'].to(device)
-        bbox = batch['bbox'].to(device)
-        image = batch['image'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        token_type_ids = batch['token_type_ids'].to(device)
-        labels = batch['labels'].to(device)
-
-        # zero the parameter gradients
-        optimizer.zero_grad()
-        
-        # forward + backward + optimize
-        outputs = model(input_ids=input_ids,
-                        bbox=bbox,
-                        image=image,
-                        attention_mask=attention_mask,
-                        token_type_ids=token_type_ids,
-                        labels=labels) 
-        loss = outputs.loss
-        
-        # print loss every 100 steps
-        if global_step % 100 == 0:
-          print(f"Loss after {global_step} steps: {loss.item()}")
-
-        loss.backward()
-        optimizer.step()
-        global_step += 1
-
-import pickle
-model.save_pretrained("data_dvc/CORD/Checkpoints")
-with open("data_dvc/CORD/Checkpoints/labels.pkl", 'wb') as t:
-    pickle.dump(labels, t)
-
 """## Evaluation
 
 Let's evaluate the model on the test set. First, let's do a sanity check on the first example of the test set.
@@ -249,8 +204,8 @@ processor.tokenizer.decode(encoding['input_ids'])
 ground_truth_labels = [id2label[label] for label in encoding['labels'].squeeze().tolist() if label != -100]
 print(ground_truth_labels)
 
-for k, v in encoding.items():
-    encoding[k] = v.unsqueeze(0).to(device)
+for k,v in encoding.items():
+  encoding[k] = v.unsqueeze(0).to(device)
 
 model.eval()
 # forward pass
@@ -262,8 +217,7 @@ prediction_indices = outputs.logits.argmax(-1).squeeze().tolist()
 print(prediction_indices)
 
 prediction_indices = outputs.logits.argmax(-1).squeeze().tolist()
-predictions = [id2label[label] for gt, label in zip(encoding['labels'].squeeze().tolist(), prediction_indices) if
-               gt != -100]
+predictions = [id2label[label] for gt, label in zip(encoding['labels'].squeeze().tolist(), prediction_indices) if gt != -100]
 print(predictions)
 
 import numpy as np
@@ -273,7 +227,7 @@ out_label_ids = None
 
 # put model in evaluation mode
 model.eval()
-for batch in tqdm(test_dataloader, desc="Evaluating"):
+for batch in tqdm(val_dataloader, desc="Evaluating"):
     with torch.no_grad():
         input_ids = batch['input_ids'].to(device)
         bbox = batch['bbox'].to(device)
@@ -283,20 +237,19 @@ for batch in tqdm(test_dataloader, desc="Evaluating"):
         labels = batch['labels'].to(device)
 
         # forward pass
-        outputs = model(input_ids=input_ids, bbox=bbox, image=image, attention_mask=attention_mask,
+        outputs = model(input_ids=input_ids, bbox=bbox, image=image, attention_mask=attention_mask, 
                         token_type_ids=token_type_ids, labels=labels)
-
+        
         if preds_val is None:
-            preds_val = outputs.logits.detach().cpu().numpy()
-            out_label_ids = batch["labels"].detach().cpu().numpy()
+          preds_val = outputs.logits.detach().cpu().numpy()
+          out_label_ids = batch["labels"].detach().cpu().numpy()
         else:
-            preds_val = np.append(preds_val, outputs.logits.detach().cpu().numpy(), axis=0)
-            out_label_ids = np.append(
-                out_label_ids, batch["labels"].detach().cpu().numpy(), axis=0
-            )
+          preds_val = np.append(preds_val, outputs.logits.detach().cpu().numpy(), axis=0)
+          out_label_ids = np.append(
+              out_label_ids, batch["labels"].detach().cpu().numpy(), axis=0
+          )
 
 import warnings
-
 warnings.filterwarnings("ignore")
 from seqeval.metrics import (
     classification_report,
@@ -304,30 +257,36 @@ from seqeval.metrics import (
     precision_score,
     recall_score)
 
-
 def results_test(preds, out_label_ids, labels):
-    preds = np.argmax(preds, axis=2)
+  preds = np.argmax(preds, axis=2)
 
-    label_map = {i: label for i, label in enumerate(labels)}
+  label_map = {i: label for i, label in enumerate(labels)}
 
-    out_label_list = [[] for _ in range(out_label_ids.shape[0])]
-    preds_list = [[] for _ in range(out_label_ids.shape[0])]
+  out_label_list = [[] for _ in range(out_label_ids.shape[0])]
+  preds_list = [[] for _ in range(out_label_ids.shape[0])]
 
-    for i in range(out_label_ids.shape[0]):
-        for j in range(out_label_ids.shape[1]):
-            if out_label_ids[i, j] != -100:
-                out_label_list[i].append(label_map[out_label_ids[i][j]])
-                preds_list[i].append(label_map[preds[i][j]])
+  for i in range(out_label_ids.shape[0]):
+      for j in range(out_label_ids.shape[1]):
+          if out_label_ids[i, j] != -100:
+              out_label_list[i].append(label_map[out_label_ids[i][j]])
+              preds_list[i].append(label_map[preds[i][j]])
 
-    results = {
-        "precision": precision_score(out_label_list, preds_list),
-        "recall": recall_score(out_label_list, preds_list),
-        "f1": f1_score(out_label_list, preds_list),
-    }
-    return results, classification_report(out_label_list, preds_list)
+  results = {
+      "precision": precision_score(out_label_list, preds_list),
+      "recall": recall_score(out_label_list, preds_list),
+      "f1": f1_score(out_label_list, preds_list),
+  }
+  return results, classification_report(out_label_list, preds_list)
 
-
-labels = list(set(all_labels))
+import pickle
+with open("data_dvc/CORD/Checkpoints/labels.pkl", 'rb') as t:
+    labels = pickle.load(t)
+# TODO use model parameter id2label
 val_result, class_report = results_test(preds_val, out_label_ids, labels)
 print("Overall results:", val_result)
 print(class_report)
+
+"""The results I was getting were: 
+
+`{'precision': 0.9307458143074582, 'recall': 0.9272175890826384, 'f1': 0.9289783516900872}`
+"""
