@@ -1,0 +1,5 @@
+outs:
+- md5: 68cf8c83987bc4765abe0458a5d783cb.dir
+  size: 359857295
+  nfiles: 204
+  path: prepared
