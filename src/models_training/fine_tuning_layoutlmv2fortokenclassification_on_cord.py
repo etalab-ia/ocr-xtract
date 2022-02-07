@@ -14,320 +14,309 @@ LayoutLMv2 is itself an upgrade of LayoutLM. The main novelty of LayoutLMv2 is t
 
 NOTES: 
 
-* you first need to prepare the CORD dataset for LayoutLMv2. For that, check out the notebook "Prepare CORD for LayoutLMv2".
-* this notebook is heavily inspired by [this Github repository](https://github.com/omarsou/layoutlm_CORD), which fine-tunes both BERT and LayoutLM (v1) on the CORD dataset.
+* this script is heavily inspired by [this Github repository](https://github.com/NielsRogge/Transformers-Tutorials/)
 
 
-
-## Install dependencies
-
-First, we install the required libraries:
-* Transformers (for the LayoutLMv2 model)
-* Datasets (for data preprocessing)
-* Seqeval (for metrics)
-* Detectron2 (which LayoutLMv2 requires for its visual backbone).
 """
 
-# !rm -r transformers
-# !git clone -b modeling_layoutlmv2_v2 https://github.com/NielsRogge/transformers.git
-# !cd tranformers
-# !pip install -q ./transformers
-#
-# !pip install -q datasets seqeval
-#
-# !pip install pyyaml==5.1
-# # workaround: install old version of pytorch since detectron2 hasn't released packages for pytorch 1.9 (issue: https://github.com/facebookresearch/detectron2/issues/3158)
-# !pip install torch==1.8.0+cu101 torchvision==0.9.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
-#
-# # install detectron2 that matches pytorch 1.8
-# # See https://detectron2.readthedocs.io/tutorials/install.html for instructions
-# !pip install -q detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.8/index.html
-# # exit(0)  # After installation, you need to "restart runtime" in Colab. This line can also restart runtime
-
-"""## Prepare the data
-
+## Prepare the data
+"""
 First, let's read in the annotations which we prepared in the other notebook. These contain the word-level annotations (words, labels, normalized bounding boxes).
 """
 
-import torch
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(device)
-
+import sys
+import os
+from PIL import Image, ImageFile
+from collections import Counter
 import pandas as pd
 
-train = pd.read_pickle('data_dvc/CORD/CORD_layoutlmv2_format/train.pkl')
-val = pd.read_pickle('data_dvc/CORD/CORD_layoutlmv2_format/dev.pkl')
-test = pd.read_pickle('data_dvc/CORD/CORD_layoutlmv2_format/test.pkl')
+from sklearn.metrics import f1_score
 
-"""Let's define a list of all unique labels. For that, let's first count the number of occurrences for each label:"""
-
-from collections import Counter
-
-all_labels = [item for sublist in train[1] for item in sublist] + [item for sublist in val[1] for item in sublist] + [item for sublist in test[1] for item in sublist]
-c_labels = Counter(all_labels)
-
-"""As we can see, there are some labels that contain very few examples. Let's replace them by the "neutral" label "O" (which stands for "Outside")."""
-
-rare_labels = [l for l in c_labels.keys() if c_labels[l] < 20]
-
-train[1] = [[sls if sls not in rare_labels else '0' for sls in ls] for ls in train[1]]
-val[1] = [[sls if sls not in rare_labels else '0' for sls in ls] for ls in val[1]]
-test[1] = [[sls if sls not in rare_labels else '0' for sls in ls] for ls in test[1]]
-
-all_labels = [item for sublist in train[1] for item in sublist] + [item for sublist in val[1] for item in sublist] + [item for sublist in test[1] for item in sublist]
-
-"""Now we have to save all the unique labels in a list."""
-labels = sorted(set(all_labels), key=all_labels.index)
-print(labels)
-
-label2id = {label: idx for idx, label in enumerate(labels)}
-id2label = {idx: label for idx, label in enumerate(labels)}
-
-from os import listdir
-from torch.utils.data import Dataset
 import torch
-from PIL import Image
-
-class CORDDataset(Dataset):
-    """CORD dataset."""
-
-    def __init__(self, annotations, image_dir, processor=None, max_length=512):
-        """
-        Args:
-            annotations (List[List]): List of lists containing the word-level annotations (words, labels, boxes).
-            image_dir (string): Directory with all the document images.
-            processor (LayoutLMv2Processor): Processor to prepare the text + image.
-        """
-        self.words, self.labels, self.boxes = annotations
-        self.image_dir = image_dir
-        self.image_file_names = [f for f in listdir(image_dir)]
-        self.processor = processor
-
-    def __len__(self):
-        return len(self.image_file_names)
-
-    def __getitem__(self, idx):
-        # first, take an image
-        item = self.image_file_names[idx]
-        image = Image.open(self.image_dir + item).convert("RGB")
-
-        # get word-level annotations 
-        words = self.words[idx]
-        boxes = self.boxes[idx]
-        word_labels = self.labels[idx]
-
-        assert len(words) == len(boxes) == len(word_labels)
-        
-        word_labels = [label2id[label] for label in word_labels]
-        # use processor to prepare everything
-        encoded_inputs = self.processor(image, words, boxes=boxes, word_labels=word_labels, 
-                                        padding="max_length", truncation=True, 
-                                        return_tensors="pt")
-        
-        # remove batch dimension
-        for k,v in encoded_inputs.items():
-          encoded_inputs[k] = v.squeeze()
-
-        assert encoded_inputs.input_ids.shape == torch.Size([512])
-        assert encoded_inputs.attention_mask.shape == torch.Size([512])
-        assert encoded_inputs.token_type_ids.shape == torch.Size([512])
-        assert encoded_inputs.bbox.shape == torch.Size([512, 4])
-        assert encoded_inputs.image.shape == torch.Size([3, 224, 224])
-        assert encoded_inputs.labels.shape == torch.Size([512]) 
-      
-        return encoded_inputs
-
+from torch.utils.data import Dataset
 from transformers import LayoutLMv2Processor
 
-processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased", revision="no_ocr")
 
-train_dataset = CORDDataset(annotations=train,
-                            image_dir='data_dvc/CORD/train/image/',
-                            processor=processor)
-val_dataset = CORDDataset(annotations=val,
-                            image_dir='data_dvc/CORD/dev/image/',
-                            processor=processor)
-test_dataset = CORDDataset(annotations=test,
-                            image_dir='data_dvc/CORD/test/image/',
-                            processor=processor)
-
-"""Let's verify an example:"""
-
-encoding = train_dataset[0]
-encoding.keys()
-
-for k,v in encoding.items():
-  print(k, v.shape)
-
-print(processor.tokenizer.decode(encoding['input_ids']))
-
-# train[0][0]
-#
-# train[2][0]
-#
-# [id2label[label] for label in encoding['labels'].tolist() if label != -100]
-
-for id, label in zip(encoding['input_ids'][:30], encoding['labels'][:30]):
-  print(processor.tokenizer.decode([id]), label.item())
-
-"""Next, we create corresponding dataloaders."""
-
-from torch.utils.data import DataLoader
-
-train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-val_dataloader = DataLoader(val_dataset, batch_size=2, shuffle=True)
-test_dataloader = DataLoader(test_dataset, batch_size=2)
-
-"""## Train the model
-
-Let's train the model using native PyTorch. We use the AdamW optimizer with learning rate = 5e-5 (this is a good default value when fine-tuning Transformer-based models).
+ImageFile.LOAD_TRUNCATED_IMAGES = True # https://stackoverflow.com/questions/12984426/pil-ioerror-image-file-truncated-with-big-images
 
 
-"""
+if __name__ == "__main__":
 
-from transformers import LayoutLMv2ForTokenClassification, AdamW
-import torch
-from tqdm.notebook import tqdm
+    if len(sys.argv) != 3:
+        sys.stderr.write("Arguments error. Usage:\n")
+        sys.stderr.write("\tpython train.py data-folder model-dir-path\n")
+        sys.exit(1)
 
-model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased',
-                                                                      num_labels=len(labels))
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(device)
-model.to(device)
-optimizer = AdamW(model.parameters(), lr=5e-5)
-
-global_step = 0
-num_train_epochs = 4
-
-#put the model in training mode
-model.train() 
-for epoch in range(num_train_epochs):  
-   print("Epoch:", epoch)
-   for batch in tqdm(train_dataloader):
-        # get the inputs;
-        input_ids = batch['input_ids'].to(device)
-        bbox = batch['bbox'].to(device)
-        image = batch['image'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        token_type_ids = batch['token_type_ids'].to(device)
-        labels = batch['labels'].to(device)
-
-        # zero the parameter gradients
-        optimizer.zero_grad()
-        
-        # forward + backward + optimize
-        outputs = model(input_ids=input_ids,
-                        bbox=bbox,
-                        image=image,
-                        attention_mask=attention_mask,
-                        token_type_ids=token_type_ids,
-                        labels=labels) 
-        loss = outputs.loss
-        
-        # print loss every 100 steps
-        if global_step % 100 == 0:
-          print(f"Loss after {global_step} steps: {loss.item()}")
-
-        loss.backward()
-        optimizer.step()
-        global_step += 1
-
-import pickle
-model.save_pretrained("data_dvc/CORD/Checkpoints")
-with open("data_dvc/CORD/Checkpoints/labels.pkl", 'wb') as t:
-    pickle.dump(labels, t)
-
-"""## Evaluation
-
-Let's evaluate the model on the test set. First, let's do a sanity check on the first example of the test set.
-"""
-
-encoding = test_dataset[0]
-processor.tokenizer.decode(encoding['input_ids'])
-
-ground_truth_labels = [id2label[label] for label in encoding['labels'].squeeze().tolist() if label != -100]
-print(ground_truth_labels)
-
-for k, v in encoding.items():
-    encoding[k] = v.unsqueeze(0).to(device)
-
-model.eval()
-# forward pass
-outputs = model(input_ids=encoding['input_ids'], attention_mask=encoding['attention_mask'],
-                token_type_ids=encoding['token_type_ids'], bbox=encoding['bbox'],
-                image=encoding['image'])
-
-prediction_indices = outputs.logits.argmax(-1).squeeze().tolist()
-print(prediction_indices)
-
-prediction_indices = outputs.logits.argmax(-1).squeeze().tolist()
-predictions = [id2label[label] for gt, label in zip(encoding['labels'].squeeze().tolist(), prediction_indices) if
-               gt != -100]
-print(predictions)
-
-import numpy as np
-
-preds_val = None
-out_label_ids = None
-
-# put model in evaluation mode
-model.eval()
-for batch in tqdm(test_dataloader, desc="Evaluating"):
-    with torch.no_grad():
-        input_ids = batch['input_ids'].to(device)
-        bbox = batch['bbox'].to(device)
-        image = batch['image'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        token_type_ids = batch['token_type_ids'].to(device)
-        labels = batch['labels'].to(device)
-
-        # forward pass
-        outputs = model(input_ids=input_ids, bbox=bbox, image=image, attention_mask=attention_mask,
-                        token_type_ids=token_type_ids, labels=labels)
-
-        if preds_val is None:
-            preds_val = outputs.logits.detach().cpu().numpy()
-            out_label_ids = batch["labels"].detach().cpu().numpy()
-        else:
-            preds_val = np.append(preds_val, outputs.logits.detach().cpu().numpy(), axis=0)
-            out_label_ids = np.append(
-                out_label_ids, batch["labels"].detach().cpu().numpy(), axis=0
-            )
-
-import warnings
-
-warnings.filterwarnings("ignore")
-from seqeval.metrics import (
-    classification_report,
-    f1_score,
-    precision_score,
-    recall_score)
+    train = pd.read_pickle(os.path.join(sys.argv[1], "train.pkl"))
+    test = pd.read_pickle(os.path.join(sys.argv[1], "test.pkl"))
+    train_images = os.path.join(sys.argv[1], 'images', 'train')
+    test_images = os.path.join(sys.argv[1], 'images', 'test')
+    model_path = sys.argv[2]
 
 
-def results_test(preds, out_label_ids, labels):
-    preds = np.argmax(preds, axis=2)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(device)
+    if device == 'cuda':
+        torch.cuda.empty_cache()
 
-    label_map = {i: label for i, label in enumerate(labels)}
+    #Let's define a list of all unique labels. For that, let's first count the number of occurrences for each label:
 
-    out_label_list = [[] for _ in range(out_label_ids.shape[0])]
-    preds_list = [[] for _ in range(out_label_ids.shape[0])]
+    all_labels = [item for sublist in train[1] for item in sublist] + [item for sublist in test[1] for item in sublist]
+    c_labels = Counter(all_labels)
 
-    for i in range(out_label_ids.shape[0]):
-        for j in range(out_label_ids.shape[1]):
-            if out_label_ids[i, j] != -100:
-                out_label_list[i].append(label_map[out_label_ids[i][j]])
-                preds_list[i].append(label_map[preds[i][j]])
+    # There are some labels that contain very few examples. Let's replace them by the "neutral" label "O"
 
-    results = {
-        "precision": precision_score(out_label_list, preds_list),
-        "recall": recall_score(out_label_list, preds_list),
-        "f1": f1_score(out_label_list, preds_list),
-    }
-    return results, classification_report(out_label_list, preds_list)
+    rare_labels = [l for l in c_labels.keys() if c_labels[l] < 20]
+
+    train[1] = [[sls if sls not in rare_labels else '0' for sls in ls] for ls in train[1]]
+    test[1] = [[sls if sls not in rare_labels else '0' for sls in ls] for ls in test[1]]
+
+    all_labels = [item for sublist in train[1] for item in sublist] + [item for sublist in test[1] for item in sublist]
+
+    """Now we have to save all the unique labels in a list."""
+    labels = sorted(set(all_labels), key=all_labels.index)
+    print(labels)
+
+    label2id = {label: idx for idx, label in enumerate(labels)}
+    id2label = {idx: label for idx, label in enumerate(labels)}
+
+    class CORDDataset(Dataset):
+        """CORD dataset."""
+
+        def __init__(self, annotations, image_dir, processor=None, max_length=512):
+            """
+            Args:
+                annotations (List[List]): List of lists containing the word-level annotations (words, labels, boxes).
+                image_dir (string): Directory with all the document images.
+                processor (LayoutLMv2Processor): Processor to prepare the text + image.
+            """
+            self.words, self.labels, self.boxes = annotations
+            self.image_dir = image_dir
+            self.image_file_names = [f for f in os.listdir(image_dir)]
+            self.processor = processor
+
+        def __len__(self):
+            return len(self.image_file_names)
+
+        def __getitem__(self, idx):
+            # first, take an image
+            item = self.image_file_names[idx]
+            image = Image.open(os.path.join(self.image_dir, item)).convert("RGB")
+
+            # get word-level annotations
+            words = self.words[idx]
+            boxes = self.boxes[idx]
+            word_labels = self.labels[idx]
+
+            assert len(words) == len(boxes) == len(word_labels)
+
+            word_labels = [label2id[label] for label in word_labels]
+            # use processor to prepare everything
+            encoded_inputs = self.processor(image, words, boxes=boxes, word_labels=word_labels,
+                                            padding="max_length", truncation=True,
+                                            return_tensors="pt")
+
+            # remove batch dimension
+            for k, v in encoded_inputs.items():
+                encoded_inputs[k] = v.squeeze()
+
+            assert encoded_inputs.input_ids.shape == torch.Size([512])
+            assert encoded_inputs.attention_mask.shape == torch.Size([512])
+            assert encoded_inputs.token_type_ids.shape == torch.Size([512])
+            assert encoded_inputs.bbox.shape == torch.Size([512, 4])
+            assert encoded_inputs.image.shape == torch.Size([3, 224, 224])
+            assert encoded_inputs.labels.shape == torch.Size([512])
+
+            return encoded_inputs
+
+    processor = LayoutLMv2Processor.from_pretrained("microsoft/layoutlmv2-base-uncased", revision="no_ocr")
+
+    train_dataset = CORDDataset(annotations=train,
+                                image_dir=train_images,
+                                processor=processor)
+    test_dataset = CORDDataset(annotations=test,
+                               image_dir=test_images,
+                               processor=processor)
+
+    """Let's verify an example:"""
+
+    encoding = train_dataset[1]
+    encoding.keys()
+
+    for k, v in encoding.items():
+        print(k, v.shape)
+
+    b = processor.tokenizer.decode(encoding['input_ids'])
+    print(processor.tokenizer.decode(encoding['input_ids']))
+
+    # train[0][1]
+    #
+    a = train[0][1]
+    #
+    # [id2label[label] for label in encoding['labels'].tolist() if label != -100]
+
+    for id, label in zip(encoding['input_ids'][:30], encoding['labels'][:30]):
+        print(processor.tokenizer.decode([id]), label.item())
+
+    """Next, we create corresponding dataloaders."""
+
+    from torch.utils.data import DataLoader
+
+    train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=2)
+
+    """## Train the model
+    
+    Let's train the model using native PyTorch. We use the AdamW optimizer with learning rate = 5e-5 (this is a good default value when fine-tuning Transformer-based models).
+    
+    
+    """
+
+    from transformers import LayoutLMv2ForTokenClassification, AdamW
+    import torch
+    from tqdm.notebook import tqdm
+
+    model = LayoutLMv2ForTokenClassification.from_pretrained('microsoft/layoutlmv2-base-uncased',
+                                                             num_labels=len(labels))
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = 'cpu' #for debug
+    print(device)
+    model.to(device)
+    optimizer = AdamW(model.parameters(), lr=5e-5)
+
+    global_step = 0
+    num_train_epochs = 4
+
+    # put the model in training mode
+    model.train()
+    for epoch in range(num_train_epochs):
+        print("Epoch:", epoch)
+        for batch in tqdm(train_dataloader):
+            # get the inputs;
+            input_ids = batch['input_ids'].to(device)
+            bbox = batch['bbox'].to(device)
+            image = batch['image'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            token_type_ids = batch['token_type_ids'].to(device)
+            labels = batch['labels'].to(device)
+
+            # zero the parameter gradients
+            optimizer.zero_grad()
+
+            # forward + backward + optimize
+            outputs = model(input_ids=input_ids,
+                            bbox=bbox,
+                            image=image,
+                            attention_mask=attention_mask,
+                            token_type_ids=token_type_ids,
+                            labels=labels)
+            loss = outputs.loss
+
+            # print loss every 100 steps
+            if global_step % 100 == 0:
+                print(f"Loss after {global_step} steps: {loss.item()}")
+
+            loss.backward()
+            optimizer.step()
+            global_step += 1
+
+    import pickle
+
+    model.save_pretrained(model_path)
+    # with open("data_dvc/CORD/Checkpoints/labels.pkl", 'wb') as t:
+    #     pickle.dump(labels, t)
+
+    """## Evaluation
+    
+    Let's evaluate the model on the test set. First, let's do a sanity check on the first example of the test set.
+    """
+
+    encoding = test_dataset[0]
+    processor.tokenizer.decode(encoding['input_ids'])
+
+    ground_truth_labels = [id2label[label] for label in encoding['labels'].squeeze().tolist() if label != -100]
+    print(ground_truth_labels)
+
+    for k, v in encoding.items():
+        encoding[k] = v.unsqueeze(0).to(device)
+
+    model.eval()
+    # forward pass
+    outputs = model(input_ids=encoding['input_ids'], attention_mask=encoding['attention_mask'],
+                    token_type_ids=encoding['token_type_ids'], bbox=encoding['bbox'],
+                    image=encoding['image'])
+
+    prediction_indices = outputs.logits.argmax(-1).squeeze().tolist()
+    print(prediction_indices)
+
+    prediction_indices = outputs.logits.argmax(-1).squeeze().tolist()
+    predictions = [id2label[label] for gt, label in zip(encoding['labels'].squeeze().tolist(), prediction_indices) if
+                   gt != -100]
+    print(predictions)
+
+    import numpy as np
+
+    preds_val = None
+    out_label_ids = None
+
+    # put model in evaluation mode
+    model.eval()
+    for batch in tqdm(test_dataloader, desc="Evaluating"):
+        with torch.no_grad():
+            input_ids = batch['input_ids'].to(device)
+            bbox = batch['bbox'].to(device)
+            image = batch['image'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            token_type_ids = batch['token_type_ids'].to(device)
+            labels = batch['labels'].to(device)
+
+            # forward pass
+            outputs = model(input_ids=input_ids, bbox=bbox, image=image, attention_mask=attention_mask,
+                            token_type_ids=token_type_ids, labels=labels)
+
+            if preds_val is None:
+                preds_val = outputs.logits.detach().cpu().numpy()
+                out_label_ids = batch["labels"].detach().cpu().numpy()
+            else:
+                preds_val = np.append(preds_val, outputs.logits.detach().cpu().numpy(), axis=0)
+                out_label_ids = np.append(
+                    out_label_ids, batch["labels"].detach().cpu().numpy(), axis=0
+                )
+
+    import warnings
+
+    warnings.filterwarnings("ignore")
+    from seqeval.metrics import (
+        classification_report,
+        f1_score,
+        precision_score,
+        recall_score)
 
 
-labels = list(set(all_labels))
-val_result, class_report = results_test(preds_val, out_label_ids, labels)
-print("Overall results:", val_result)
-print(class_report)
+    def results_test(preds, out_label_ids, labels):
+        preds = np.argmax(preds, axis=2)
+
+        label_map = {i: label for i, label in enumerate(labels)}
+
+        out_label_list = [[] for _ in range(out_label_ids.shape[0])]
+        preds_list = [[] for _ in range(out_label_ids.shape[0])]
+
+        for i in range(out_label_ids.shape[0]):
+            for j in range(out_label_ids.shape[1]):
+                if out_label_ids[i, j] != -100:
+                    out_label_list[i].append(label_map[out_label_ids[i][j]])
+                    preds_list[i].append(label_map[preds[i][j]])
+
+        results = {
+            "precision": precision_score(out_label_list, preds_list),
+            "recall": recall_score(out_label_list, preds_list),
+            "f1": f1_score(out_label_list, preds_list),
+        }
+        return results, classification_report(out_label_list, preds_list)
+
+
+    labels = list(set(all_labels))
+    val_result, class_report = results_test(preds_val, out_label_ids, labels)
+    print("Overall results:", val_result)
+    print(class_report)
