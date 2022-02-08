@@ -16,11 +16,24 @@ def generate_annotations(list_images, df):
         data = df[df['document_name'].str.contains(image)]
         if len(data) == 0:
             print('No data for ' + image)
+            continue
         width, height = data["original_width"].unique()[0], data["original_height"].unique()[0]
         # loop over OCR annotations
-        words.append(data['word'].to_list())
-        boxes.append([[int(1000 * b) for b in d] for d in data[['min_x', 'min_y', 'max_x', 'max_y']].to_numpy().tolist()])   # important: each bounding box should be in (bottom left, upper right) format
-        labels.append(data['label'].to_list())
+        w = data['word'].to_list()
+        b = [[int(1000 * b) for b in d] for d in data[['min_x', 'min_y', 'max_x', 'max_y']].to_numpy().tolist()]
+        l = data['label'].to_list()
+
+        for i, boxs in enumerate(b):
+            assert len(boxs) == 4
+            for box in boxs:
+                if box == 1000:
+                    boxs[boxs.index(1000)] = 999
+                    b[i] = boxs
+
+
+        words.append(w)
+        boxes.append(b)   # important: each bounding box should be in (bottom left, upper right) format
+        labels.append(l)
 
     return words, boxes, labels
 
@@ -50,6 +63,7 @@ if __name__ == "__main__":
     df = pd.read_csv(input_csv, sep='\t')
     df['doc_pages'] = df.apply(lambda x: str(x['document_name']) + str(x['page_id']), axis=1)
     df['word'] = df['word'].fillna(' ')
+    df['label'] = df['label'].fillna('O')
 
     # read images folder
     list_images = os.listdir(input_image_folder)
