@@ -1,6 +1,5 @@
 OCR_XTRACT
 ====
-![LOGO](.github/reading_snake.jpg)
 
 This project is conducted by the [Lab IA](https://www.etalab.gouv.fr/datasciences-et-intelligence-artificielle) at [Etalab](https://www.etalab.gouv.fr/).  
 The Lab IA helps french administrations to modernize their services by the use of modern AI techniques.  
