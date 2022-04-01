@@ -36,7 +36,7 @@ Source: model card paper :  https://arxiv.org/abs/1810.03993
 * Relevant factors: relevant factors could be 
   * Quality of the picture of the scan 
   * if the picture is straight of pivoted (pivoted images may result in poor quality OCR and therefore poor quality information extraction)
-* Evaluation factors
+
 
 ## Metrics. 
 *Metrics should be chosen to reflect potential realworld impacts of the model.*
@@ -47,8 +47,7 @@ Source: model card paper :  https://arxiv.org/abs/1810.03993
   * "nom": 0.96, 
   * "date_naissance"1.0
 
-* Decision thresholds
-* Variation approaches
+
 
 ## Evaluation Data. 
 *Details on the dataset(s) used for the quantitative analyses in the card.*
@@ -69,8 +68,6 @@ A set of 400 documents were annotated using Label Studio. The images were loaded
 
 ## Quantitative Analyses
 
-* Unitary results
-* Intersectional results
 
 ## Ethical Considerations
 
