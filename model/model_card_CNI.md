@@ -36,6 +36,7 @@ Source: model card paper :  https://arxiv.org/abs/1810.03993
 * Relevant factors: relevant factors could be 
   * Quality of the picture of the scan 
   * if the picture is straight of pivoted (pivoted images may result in poor quality OCR and therefore poor quality information extraction)
+  * The commonness of the names 
 
 
 ## Metrics. 
