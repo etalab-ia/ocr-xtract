@@ -22,7 +22,7 @@ OCR-Xtract is a tool that performs OCR and information extraction from documents
 * Python
 
 ## Project Description 
-For now, only a POC is available for extracting information for French DNI and for the french paychecks 
+For now, only a POC is available for extracting information for French DNI and for the french payslips. 
 
 ## Getting Started for development
 * Fork this repo
@@ -92,9 +92,9 @@ docker run -it -p 8080:8080 -v C:\Users\Utilisateur\PythonProjects\ocr-xtract\da
    - name your project
    - import the json file generated in step 2.
    - select object detection with Bounding Boxes in Labeling Setup
-   - Input the label you want to have for the annotation.
+   - define the labels corresponding to the categories you want to extract 
 
-5. Once the annotation is complete, you can export the annotation in json
+5. Once the annotation is complete, you can export the annotation in the json format
 6. Convert the annotation from json to csv with `script_get_csv_from_annotation_json.py`
 7. Use this file to train a new model with ``train_cni_pipeline.py``
 
