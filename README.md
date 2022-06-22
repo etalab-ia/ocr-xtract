@@ -19,7 +19,7 @@ OCR-Xtract is a tool that performs OCR and information extraction from documents
 
 
 ### Technologies 
-* Python
+* Python 3.7
 
 ## Project Description 
 For now, only a POC is available for extracting information for French DNI and for the french payslips. 
