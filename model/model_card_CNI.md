@@ -44,7 +44,7 @@ Source: model card paper :  https://arxiv.org/abs/1810.03993
 
 * Model performance measures: for each of the key information extracted, precision, recall, F1-Score. For the overall performance, average of these 3 indicators over the different labels to be extracted. 
 * F1-score for the 3 extracted categories: 
-  *"prenom":0.99,
+  * "prenom":0.99,
   * "nom": 0.96, 
   * "date_naissance"1.0
 
